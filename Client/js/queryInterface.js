@@ -37,7 +37,7 @@ sendANYButton.onclick = sendData;
     }
 
 
-    function serializeObject() {
+    $.fn.serializeObject = function () {
         var o = {};
         var a = this.serializeArray();
         $.each(a, function () {
@@ -52,4 +52,3 @@ sendANYButton.onclick = sendData;
         });
         return o;
     };
-
