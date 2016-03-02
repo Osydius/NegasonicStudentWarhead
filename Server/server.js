@@ -30,14 +30,14 @@ var serverApp = protocol.createServer(function (request, response) {
 	} else if (request.method == 'POST'){
 		if(pathname != "" && pathname != null && pathname != "/"){
 			var body = '';
-      req.on('data', function (data) {
+      request.on('data', function (data) {
           body += data;
           if (body.length > 1e6) {
-              res.writeHead(413, {'Content-Type': 'text/plain'}).end();
-              req.connection.destroy();
+              response.writeHead(413, {'Content-Type': 'text/plain'}).end();
+              request.connection.destroy();
           }
       });
-      req.on('end', function () {
+      request.on('end', function () {
       	if(pathname == '/getAllTweets.html'){
 					getAllTweets(body, response);
 				} else if(pathname == '/getAnyTweets.html'){
@@ -70,25 +70,27 @@ function getAllTweets(clientData, response){
 	var allData = JSON.parse(clientData);
 
 	var twitterQuery = '';
-	var queryTeam = alLData.team;
+	var queryTeam = allData.team;
 	var queryPlayers = allData.players;
 	var queryHashtags = allData.hashtags;
 	var queryKeywords = allData.keywords;
 
 	twitterQuery = twitterQuery + ' from:' + queryTeam;
-	$.each(queryPlayers, function(playerIndex, player){
-		twitterQuery = twitterQuery + ' from:' + player;
-	});
+	if(queryPlayers !== undefined && queryHashtags !== undefined && queryKeywords !== undefined){
+		queryPlayers.foreach(function(player){
+			twitterQuery = twitterQuery + ' from:' + player;
+		});
 
-	$.each(queryHashtags, function(hashtagIndex, hashtag){
-		twitterQuery = twitterQuery + ' #' + hashtag;
-	});
+		queryHashtags.foreach(function(hashtag){
+			twitterQuery = twitterQuery + ' #' + hashtag;
+		});
 
-	$.each(queryPlayers, function(keywordIndex, keyword){
-		twitterQuery = twitterQuery + player;
-	});
+		queryPlayers.each(function(keyword){
+			twitterQuery = twitterQuery + player;
+		});
+	}
 
-	twitterClient.get('search/tweets', { q: twitterQuery }, function(err, data, response) {
+	twitterClient.get('search/tweets', { q: twitterQuery }, function(err, data, result) {
 
     tweets = JSON.stringify(data.statuses);
 
