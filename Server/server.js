@@ -67,6 +67,8 @@ function callError(request, response){
 }
 
 function getAllTweets(clientData, response){
+	console.log(clientData)
+	
 	var allData = JSON.parse(clientData);
 
 	var twitterQuery = '';
@@ -97,9 +99,9 @@ function getAllTweets(clientData, response){
     response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
     response.end(tweets);
 
-  });
+  }); 
 }
 
 function getAnyTweets(clientData){
-
+	console.log(clientData)
 }

@@ -1,64 +1,34 @@
 <!DOCTYPE html>
 <html>
-
-  <head>
+<head lang="en">
+    <meta charset="UTF-8">
     <title>Football Discussions</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Bootstrap -->
-    <link href="../bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
-  </head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 
 
-  <body>
-    
+</head>
+<body>
+<h1>Track Discussions</h1>
 
-    <div id="track_discussions_form" class="col-md-2 col-md-offset-5">
-      <h1>Track Discussions</h1>
+<form id="myForm" onsubmit="sendData">
+    Team<br>
+    <input type="text" name="team">
+    <br>
+    Players<br>
+    <input type="text" name="players" >
+    <br>
+    Hashtags<br>
+    <input type="date" name="hashtags">
+    <br>
+    Keywords<br>
+    <input type="text" name="keywords" >
+    <br>
+    <br><br>
+    <button id="sendALLButton">Get tweets that contain ALL of these terms</button>
+    <button id="sendANYButton">Get tweets that contain ANY of these terms</button>
+</form>
 
-      <form class="form" onsubmit="sendData">
-        <div class="control-group">
-          <label class="control-label" for="inputAuthor">Author</label>
-          <div class="controls">
-            <input type="text" id="inputAuthor">
-          </div>
-        </div>
+<script src="js/queryInterface.js"></script>
 
-        <div class="control-group">
-          <label class="control-label" for="inputPlayers">Players</label>
-          <div class="controls">
-            <input type="text" id="inputPlayers" >
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label class="control-label" for="inputHashtags">Hashtags</label>
-          <div class="controls">
-            <input type="text" id="inputHashtags" >
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label class="control-label" for="inputKeywords">Keywords</label>
-          <div class="controls">
-            <input type="text" id="inputKeywords" >
-          </div>
-        </div>
-
-        <div class="control-group-inline">
-          <div class="controls">
-            <button type="submit" id="sendALLButton" class="btn">Get tweets that contain ALL of these terms</button>
-          </div>
-          <div class="controls">
-            <button type="submit" id="sendANYButton"  class="btn">Get tweets that contain ANY of these terms</button>
-          </div>
-        </div>
-      </form>
-    </div>
-
-
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
-    <script src="js/queryInterface.js"></script>
-    <script src="../bootstrap/js/bootstrap.min.js"></script>
-  </body>
+</body>
 </html>
