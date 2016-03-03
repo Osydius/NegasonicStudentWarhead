@@ -39,6 +39,7 @@ hr{
 /* Smooth outline with box-shadow: */
 input[type=text] {
     box-shadow: 0 0 0 2pt #ff9933;
+    font-family: 'Oswald', sans-serif;
 }
 
 /* Hard "outline" with box-shadow: */
