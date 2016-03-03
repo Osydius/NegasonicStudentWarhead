@@ -23,7 +23,6 @@ var serverApp = protocol.createServer(function (request, response) {
 
 	if(request.method == 'GET'){
 		if(pathname != "" && pathname != null && pathname != "/"){
-			console.log("getting methods");
 		} else {
 			callError(request, response);
 		}
@@ -41,7 +40,7 @@ var serverApp = protocol.createServer(function (request, response) {
       	if(pathname == '/getAllTweets.html'){
 					getAllTweets(body, response);
 				} else if(pathname == '/getAnyTweets.html'){
-					getAnyTweets(body);
+					getAnyTweets(body, response);
 				}
       });
 		} else {
@@ -67,8 +66,6 @@ function callError(request, response){
 }
 
 function getAllTweets(clientData, response){
-	console.log(clientData)
-	
 	var allData = JSON.parse(clientData);
 
 	var twitterQuery = '';
@@ -85,30 +82,86 @@ function getAllTweets(clientData, response){
 				twitterQuery = twitterQuery + ' from:' + queryPlayers[i];
 			}
 		}
+	}
 
+	if(queryHashtags !== undefined){
 		queryHashtagsCount = queryHashtags.length;
 		for(i = 0; i < queryHashtagsCount; i++){
 			if(queryHashtags[i] != ""){
 				twitterQuery = twitterQuery + ' from:' + queryHashtags[i];
 			}
 		}
+	}
 
+	if(queryKeywords !== undefined){
 		queryKeywordsCount = queryKeywords.length;
 		for(i = 0; i < queryKeywordsCount; i++){
 			if(queryKeywords[i] != ""){
 				twitterQuery = twitterQuery + ' from:' + queryKeywords[i];
 			}
 		}
-
-		twitterClient.get('search/tweets', { q: twitterQuery }, function(err, data, result) {
-	    tweets = JSON.stringify(data.statuses);
-
-	    response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-	    response.end(tweets);
-  	}); 
 	}
+
+	queryTwitter(twitterQuery, response);
 }
 
-function getAnyTweets(clientData){
-	console.log(clientData)
+function getAnyTweets(clientData, response){
+	var allData = JSON.parse(clientData);
+
+	var twitterQuery = '';
+	var queryTeam = allData.team;
+	var queryPlayers = allData.players;
+	var queryHashtags = allData.hashtags;
+	var queryKeywords = allData.keywords;
+
+	twitterQuery = twitterQuery + ' from:' + queryTeam;
+
+	if(queryPlayers !== undefined){
+		queryPlayersCount = queryPlayers.length;
+		for(i = 0; i < queryPlayersCount; i++){
+			if(queryPlayers[i] != ""){
+				if(twitterQuery == ""){
+					twitterQuery = twitterQuery + ' from:' + queryPlayers[i];
+				} else {
+					twitterQuery = twitterQuery + ' OR from:' + queryPlayers[i];
+				}
+				
+			}
+		}
+	}
+	if(queryHashtags !== undefined){
+		queryHashtagsCount = queryHashtags.length;
+		for(i = 0; i < queryHashtagsCount; i++){
+			if(queryHashtags[i] != ""){
+				if(twitterQuery == ""){
+					twitterQuery = twitterQuery + ' from:' + queryHashtags[i];
+				} else {
+					twitterQuery = twitterQuery + ' OR from:' + queryHashtags[i];
+				}
+			}
+		}
+	}
+	if(queryKeywords !== undefined){
+		queryKeywordsCount = queryKeywords.length;
+		for(i = 0; i < queryKeywordsCount; i++){
+			if(queryKeywords[i] != ""){
+				if(twitterQuery == ""){
+					twitterQuery = twitterQuery + ' from:' + queryKeywords[i];
+				} else {
+					twitterQuery = twitterQuery + ' OR from:' + queryKeywords[i];
+				}
+			}
+		}
+	}
+	queryTwitter(twitterQuery, response);
+}
+
+function queryTwitter(query, response){
+	twitterClient.get('search/tweets', { q: query, count:300 }, function(err, data, result) {
+    var tweets = JSON.stringify(data.statuses);
+
+    response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+    // response.writeHead(200, {"Content-Type": "application/json"});
+    response.end(tweets);
+	}); 
 }
