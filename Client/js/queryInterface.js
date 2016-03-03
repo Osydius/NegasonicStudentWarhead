@@ -12,7 +12,7 @@ function sendALLAjaxQuery(url, data) {
             },
             error: function (xhr, status, error) {
                 console.log('Error: ' + error.message);
-               alert('error connecting');
+               
             }
         });
     }
@@ -37,14 +37,12 @@ function sendANYAjaxQuery(url, data) {
         var o = {};
         var a = this.serializeArray();
         $.each(a, function () {
-            console.log(this)
             if (o[this.name] !== undefined) {
                 if (!o[this.name].push) {
                     o[this.name] = [o[this.name]];
                 }
                 o[this.name].push(this.value || '');
             } else {
-                console.log('undefined')
                 if(this.name === "players" || "hashtags" || "keywords"){
 
                     var players = this.value
