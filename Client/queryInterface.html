@@ -4,31 +4,39 @@
     <meta charset="UTF-8">
     <title>Football Discussions</title>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-
+    <link href="../bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link rel="stylesheet" type="text/css" href="css/queryInterface.css">
+    <!-- for the font -->
+    <link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
 
 </head>
 <body>
-<h1>Track Discussions</h1>
+    <div id="title_bar">
+        <h1>APPLICATION NAME</h1>
+        <b>Track your favourite team and find out what is happening in the world of football through twitter</b>
+    </div>
+    <div id="track_discussions_form">
+        <h3>Find out what's happening</h3>
+        
 
-<form id="myForm" onsubmit="sendData">
-    Team<br>
-    <input type="text" name="team">
-    <br>
-    Players<br>
-    <input type="text" name="players" >
-    <br>
-    Hashtags<br>
-    <input type="date" name="hashtags">
-    <br>
-    Keywords<br>
-    <input type="text" name="keywords" >
-    <br>
-    <br><br>
-    <button id="sendALLButton">Get tweets that contain ALL of these terms</button>
-    <button id="sendANYButton">Get tweets that contain ANY of these terms</button>
-</form>
+        <form id="myForm" onsubmit="sendData">
+            Team <input type="text" name="team" class = "field">
+            <br>
+            Players <input type="text" name="players" class = "field">
+            <br>
+            Hashtags <input type="text" name="hashtags" class = "field">
+            <br>
+            Keywords <input type="text" name="keywords" class = "field">
+            <br>
+            <br><br>
+            <button id="sendALLButton" class="btn btn-custom">Get tweets that contain ALL of these terms</button>
+            <button id="sendANYButton" class="btn btn-custom">Get tweets that contain ANY of these terms</button>
+        </form>
+    </div>
+    <hr>
 
 <script src="js/queryInterface.js"></script>
+<script src="../bootstrap/js/bootstrap.min.js"></script>
 
 </body>
 </html>

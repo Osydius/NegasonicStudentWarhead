@@ -1,0 +1,75 @@
+#track_discussions_form {
+	text-align: center;
+    background-color: #009933;
+    font-family: 'Oswald', sans-serif;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    color: white;
+    margin:0px;
+}
+
+#title_bar {
+	background-color: #004d1a;
+	color:white;
+	padding:10px;
+	font-family: 'Oswald', sans-serif;
+}
+
+h1 {
+	margin-top: 0px;
+	color:white;
+}
+
+body {
+	background-color: #f2f2f2;
+}
+
+hr{
+	margin:0px;
+	padding:0px;
+	color: #ff9933;
+	background-color: #ff9933;
+	height: 5px;
+}
+
+.field {
+	/*outline: #ff9933 solid medium;*/
+}
+
+/* Smooth outline with box-shadow: */
+input[type=text] {
+    box-shadow: 0 0 0 2pt #ff9933;
+}
+
+/* Hard "outline" with box-shadow: */
+input[type=text]:focus {
+    box-shadow: 0 0 0 2pt #ff9933;
+}
+
+
+
+.btn-custom {
+  font-family: 'Oswald', sans-serif;
+  background-color: hsl(30, 100%, 60%) !important;
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#ff9932", endColorstr="#ff9932");
+  background-image: -khtml-gradient(linear, left top, left bottom, from(#ff9932), to(#ff9932));
+  background-image: -moz-linear-gradient(top, #ff9932, #ff9932);
+  background-image: -ms-linear-gradient(top, #ff9932, #ff9932);
+  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff9932), color-stop(100%, #ff9932));
+  background-image: -webkit-linear-gradient(top, #ff9932, #ff9932);
+  background-image: -o-linear-gradient(top, #ff9932, #ff9932);
+  background-image: linear-gradient(#ff9932, #ff9932);
+  border-color: #ff9932 #ff9932 hsl(30, 100%, 60%);
+  color: #fff !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.00);
+  -webkit-font-smoothing: antialiased;
+}
+
+textarea:focus, input:focus, input[type]:focus, .uneditable-input:focus {   
+    border-color: #ff9933;
+     box-shadow: 0 0 0 2pt #ff9933;
+    outline: #ff9933 thick;
+}
+
+
