@@ -78,28 +78,35 @@ function getAllTweets(clientData, response){
 	var queryKeywords = allData.keywords;
 
 	twitterQuery = twitterQuery + ' from:' + queryTeam;
-	if(queryPlayers !== undefined && queryHashtags !== undefined && queryKeywords !== undefined){
-		queryPlayers.foreach(function(player){
-			twitterQuery = twitterQuery + ' from:' + player;
-		});
+	if(queryPlayers !== undefined){
+		queryPlayersCount = queryPlayers.length;
+		for(i = 0; i < queryPlayersCount; i++){
+			if(queryPlayers[i] != ""){
+				twitterQuery = twitterQuery + ' from:' + queryPlayers[i];
+			}
+		}
 
-		queryHashtags.foreach(function(hashtag){
-			twitterQuery = twitterQuery + ' #' + hashtag;
-		});
+		queryHashtagsCount = queryHashtags.length;
+		for(i = 0; i < queryHashtagsCount; i++){
+			if(queryHashtags[i] != ""){
+				twitterQuery = twitterQuery + ' from:' + queryHashtags[i];
+			}
+		}
 
-		queryPlayers.each(function(keyword){
-			twitterQuery = twitterQuery + player;
-		});
+		queryKeywordsCount = queryKeywords.length;
+		for(i = 0; i < queryKeywordsCount; i++){
+			if(queryKeywords[i] != ""){
+				twitterQuery = twitterQuery + ' from:' + queryKeywords[i];
+			}
+		}
+
+		twitterClient.get('search/tweets', { q: twitterQuery }, function(err, data, result) {
+	    tweets = JSON.stringify(data.statuses);
+
+	    response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+	    response.end(tweets);
+  	}); 
 	}
-
-	twitterClient.get('search/tweets', { q: twitterQuery }, function(err, data, result) {
-
-    tweets = JSON.stringify(data.statuses);
-
-    response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-    response.end(tweets);
-
-  }); 
 }
 
 function getAnyTweets(clientData){
