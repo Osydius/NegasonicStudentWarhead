@@ -6,9 +6,7 @@ function sendALLAjaxQuery(url, data) {
             url: url+'getAllTweets.html',
             data: data,
             success: function (data) {
-                //alert('success '+data);
-                //var struct= JSON.parse(data);
-                console.log(data)
+                handleServerResponse(data);
             },
             error: function (xhr, status, error) {
                 console.log('Error: ' + error.message);
@@ -24,12 +22,55 @@ function sendANYAjaxQuery(url, data) {
         type: 'POST',
         url: url + 'getAnyTweets.html',
         success: function (data, status, xhr) {
-            console.log(data)
+            handleServerResponse(data);
         },
             error: function (xhr, status, error) {
             console.log('Error: ' + error.message);
         }
 });
+}
+
+function handleServerResponse(data){
+    var retrieved_tweet_display = $('#retrieved_tweet_display');
+    var no_tweets = $('#no_tweets');
+
+    console.log(data);
+    
+    no_tweets.html(data.length);
+
+    for(i=0; i<data.length; i++){
+        if (data[i].retweeted){
+            console.log('retweeted');
+        } else {
+            console.log('original tweet');
+            var container = document.createElement("div");
+            var author = document.createElement("p");
+            var tweetText = document.createElement("p");
+            var createdAt = document.createElement("p");
+            var br1 = document.createElement("br");
+            var br2 = document.createElement("br");
+
+            $('#tweets').append(container);
+            container.appendChild(author);
+            container.appendChild(br1);
+            container.appendChild(tweetText);
+            container.appendChild(br2);
+            container.appendChild(createdAt);
+
+
+            container.className = "tweet";
+            author.innerHTML = data[i].user.name + ' @' + data[i].user.screen_name;
+            tweetText.innerHTML = data[i].text;
+            createdAt.innerHTML = data[i].created_at;
+
+            
+
+
+        }
+    }
+
+    retrieved_tweet_display.css("display", "block");
+    
 }
 
 

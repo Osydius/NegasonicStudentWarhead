@@ -1,7 +1,6 @@
 #track_discussions_form {
 	text-align: center;
     background-color: #009933;
-    font-family: 'Oswald', sans-serif;
     padding-top: 10px;
     padding-bottom: 10px;
     color: white;
@@ -12,7 +11,19 @@
 	background-color: #004d1a;
 	color:white;
 	padding:10px;
-	font-family: 'Oswald', sans-serif;
+}
+
+#retrieved_tweet_display {
+	background-color: white;
+	border-radius: 4px;
+	margin-left: 10px;
+	margin-right: 10px;
+	display: none;
+}
+
+.tweet{
+	border:1px solid black;
+	padding: 3px;
 }
 
 h1 {
@@ -22,6 +33,7 @@ h1 {
 
 body {
 	background-color: #f2f2f2;
+	font-family: 'Oswald', sans-serif;
 }
 
 hr{
@@ -30,6 +42,13 @@ hr{
 	color: #ff9933;
 	background-color: #ff9933;
 	height: 5px;
+	border: none;
+}
+
+p{
+	margin: 0px;
+	padding: 0px;
+	display:inline;
 }
 
 .field {

@@ -15,6 +15,7 @@
         <h1>APPLICATION NAME</h1>
         <b>Track your favourite team and find out what is happening in the world of football through twitter</b>
     </div>
+
     <div id="track_discussions_form">
         <h3>Find out what's happening</h3>
         
@@ -33,7 +34,16 @@
             <button id="sendANYButton" class="btn btn-custom">Get tweets that contain ANY of these terms</button>
         </form>
     </div>
+
     <hr>
+
+    <div id="retrieved_tweet_display" >
+        <h3>Retrieved tweets</h3>
+        <p>We found <p id="no_tweets"></p> tweets for you</p><br>
+        <div id="tweets">
+            
+        </div>
+    </div>
 
 <script src="js/queryInterface.js"></script>
 <script src="../bootstrap/js/bootstrap.min.js"></script>
