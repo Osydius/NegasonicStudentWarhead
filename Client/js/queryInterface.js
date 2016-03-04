@@ -44,7 +44,7 @@ function handleServerResponse(data){
         } else {
             console.log('original tweet');
             var container = document.createElement("div");
-            var author = document.createElement("p");
+            var author = document.createElement("a");
             var tweetText = document.createElement("p");
             var createdAt = document.createElement("p");
             var br1 = document.createElement("br");
@@ -59,9 +59,10 @@ function handleServerResponse(data){
 
 
             container.className = "tweet";
-            author.innerHTML = data[i].user.name + ' @' + data[i].user.screen_name;
-            tweetText.innerHTML = data[i].text;
-            createdAt.innerHTML = data[i].created_at;
+            $(author).attr('href', "http://www.twitter.com/"+data[i].user.screen_name);
+            $(author).text(data[i].user.name + ' @' + data[i].user.screen_name);
+            $(tweetText).text(data[i].text);
+            $(createdAt).text(data[i].created_at);
 
             
 
