@@ -158,10 +158,23 @@ function getAnyTweets(clientData, response){
 
 function queryTwitter(query, response){
 	twitterClient.get('search/tweets', { q: query, count:300 }, function(err, data, result) {
-    var tweets = JSON.stringify(data.statuses);
+		var returnTweets = [];
+		var totalTweets = data.statuses.length;
+
+		for(var i=0; i < totalTweets; i++){
+			var newTweet = {};
+			newTweet.created_at = data.statuses[i].created_at;
+			newTweet.entities = data.statuses[i].entities;
+			newTweet.text = data.statuses[i].text;
+			newTweet.user = {};
+			newTweet.user.name = data.statuses[i].user.name;
+			newTweet.user.screen_name = data.statuses[i].user.screen_name;
+			returnTweets[i] = newTweet;
+		}
+
+    var returnTweets = JSON.stringify(returnTweets);
 
     response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-    // response.writeHead(200, {"Content-Type": "application/json"});
-    response.end(tweets);
+    response.end(returnTweets);
 	}); 
 }
