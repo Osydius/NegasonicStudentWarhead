@@ -86,13 +86,23 @@ function linkifyTweet(tweetData){
     if(hashtagArray.length > 0){
         for(j=0; j<hashtagArray.length; j++){
         
-        indicesArray = hashtagArray[j].indices;
-        var hashtag = tweetData.text.substring(indicesArray[0], indicesArray[1]);
-        //console.log(hashtag);
-        tweetText = tweetText.replace(hashtag, "<a href=\" https://twitter.com/hashtag/" +hashtag.substring(1)+ "?src=hash\">"+hashtag+"</a>");
-        //console.log(tweetText);
+            indicesArray = hashtagArray[j].indices;
+            var hashtag = tweetData.text.substring(indicesArray[0], indicesArray[1]);
+            tweetText = tweetText.replace(hashtag, "<a href=\" https://twitter.com/hashtag/" +hashtag.substring(1)+ "?src=hash\">"+hashtag+"</a>");
+        }
     }
+
+    //handle mentions
+    var mentionsArray = tweetData.entities.user_mentions;
+
+    if(mentionsArray.length > 0){
+        for(j=0; j<mentionsArray.length; j++){
+            indicesArray = mentionsArray[j].indices;
+            var mention = tweetData.text.substring(indicesArray[0], indicesArray[1]);
+            tweetText = tweetText.replace(mention, "<a href=\"https://twitter.com/"+ mention.substring(1) +" \">"+mention+"</a>");
+        }
     }
+    
     
 
     //replace each hashtag with href
