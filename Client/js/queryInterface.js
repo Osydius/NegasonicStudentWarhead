@@ -94,7 +94,6 @@ function linkifyTweet(tweetData){
 
     //handle mentions
     var mentionsArray = tweetData.entities.user_mentions;
-
     if(mentionsArray.length > 0){
         for(j=0; j<mentionsArray.length; j++){
             indicesArray = mentionsArray[j].indices;
@@ -102,10 +101,15 @@ function linkifyTweet(tweetData){
             tweetText = tweetText.replace(mention, "<a href=\"https://twitter.com/"+ mention.substring(1) +" \">"+mention+"</a>");
         }
     }
-    
-    
 
-    //replace each hashtag with href
+    var urlsArray = tweetData.entities.urls;
+    if(urlsArray.length > 0){
+        for(j=0; j<urlsArray.length; j++){
+            indicesArray = urlsArray[j].indices;
+            var url = tweetData.text.substring(indicesArray[0], indicesArray[1]);
+            tweetText = tweetText.replace(url, "<a href=\""+url+"\">"+urlsArray[j].display_url+"</a>"); //should set the title attribute of a to extened_url so this is displayed when the user hovers on the link
+        }
+    }
 
     return tweetText;
 }
