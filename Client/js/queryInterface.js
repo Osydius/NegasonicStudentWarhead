@@ -33,16 +33,14 @@ function sendANYAjaxQuery(url, data) {
 function handleServerResponse(data){
     var retrieved_tweet_display = $('#retrieved_tweet_display');
     var no_tweets = $('#no_tweets');
-
-    console.log(data);
-    
+    console.log(data)
     no_tweets.html(data.length);
 
     for(i=0; i<data.length; i++){
         if (data[i].retweeted){
             console.log('retweeted');
         } else {
-            console.log('original tweet');
+
             var container = document.createElement("div");
             var author = document.createElement("a");
             var tweetText = document.createElement("p");
@@ -57,11 +55,15 @@ function handleServerResponse(data){
             container.appendChild(br2);
             container.appendChild(createdAt);
 
+            //handle urls and hashes so that they are linkable
+            //URLs
+            
+            var tweetDisplay = linkifyTweet(data[i]);
 
             container.className = "tweet";
             $(author).attr('href', "http://www.twitter.com/"+data[i].user.screen_name);
             $(author).text(data[i].user.name + ' @' + data[i].user.screen_name);
-            $(tweetText).text(data[i].text);
+            $(tweetText).html(tweetDisplay);
             $(createdAt).text(data[i].created_at);
 
             
@@ -72,6 +74,30 @@ function handleServerResponse(data){
 
     retrieved_tweet_display.css("display", "block");
     
+}
+
+
+function linkifyTweet(tweetData){
+    var tweetText = tweetData.text;
+
+    //handle hashtags first
+    var hashtagArray = tweetData.entities.hashtags;
+    //iterate through the hashtag entities array and get the location of each hashtag
+    if(hashtagArray.length > 0){
+        for(j=0; j<hashtagArray.length; j++){
+        
+        indicesArray = hashtagArray[j].indices;
+        var hashtag = tweetData.text.substring(indicesArray[0], indicesArray[1]);
+        //console.log(hashtag);
+        tweetText = tweetText.replace(hashtag, "<a href=\" https://twitter.com/hashtag/" +hashtag.substring(1)+ "?src=hash\">"+hashtag+"</a>");
+        //console.log(tweetText);
+    }
+    }
+    
+
+    //replace each hashtag with href
+
+    return tweetText;
 }
 
 
