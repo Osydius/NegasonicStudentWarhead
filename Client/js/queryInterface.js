@@ -44,7 +44,9 @@ function handleServerResponse(data){
         var br1 = document.createElement("br");
         var br2 = document.createElement("br");
 
-
+        var dateArray = data[i].created_at.split(' ');
+        var formattedDate = dateArray[3].slice(0,-3) + ' ' + dateArray[0] + ' ' + dateArray[2] + ' ' + dateArray[1] + ' ' + dateArray[5];
+        
         if (data[i].retweeted_status != null){
             var originalAuthor = document.createElement("a");
             var br3 = document.createElement("br");
@@ -68,10 +70,9 @@ function handleServerResponse(data){
             $(author).attr('href', "http://www.twitter.com/"+data[i].user.screen_name);
             $(author).text('RT:  @' + data[i].user.screen_name);
             $(tweetText).html(tweetDisplay);
-            $(createdAt).text(data[i].created_at);
-        } else {
+            $(createdAt).text(formattedDate);
 
-            
+        } else {
 
             $('#tweets').append(container);
             container.appendChild(author);
@@ -80,19 +81,13 @@ function handleServerResponse(data){
             container.appendChild(br2);
             container.appendChild(createdAt);
 
-            //handle urls and hashes so that they are linkable
-            //URLs
-            
             var tweetDisplay = linkifyTweet(data[i]);
 
             container.className = "tweet";
             $(author).attr('href', "http://www.twitter.com/"+data[i].user.screen_name);
             $(author).text(data[i].user.name + ' @' + data[i].user.screen_name);
             $(tweetText).html(tweetDisplay);
-            $(createdAt).text(data[i].created_at);
-
-            
-
+            $(createdAt).text(formattedDate);
 
         }
     }
@@ -149,8 +144,6 @@ function linkifyTweet(tweetData){
             }
         }
     }
-    
-
     return tweetText;
 }
 
