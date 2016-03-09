@@ -37,16 +37,41 @@ function handleServerResponse(data){
     no_tweets.html(data.length);
 
     for(i=0; i<data.length; i++){
-        if (data[i].retweeted){
-            console.log('retweeted');
+        var container = document.createElement("div");
+        var author = document.createElement("a");
+        var tweetText = document.createElement("p");
+        var createdAt = document.createElement("p");
+        var br1 = document.createElement("br");
+        var br2 = document.createElement("br");
+
+
+        if (data[i].retweeted_status != null){
+            var originalAuthor = document.createElement("a");
+            var br3 = document.createElement("br");
+
+            $('#tweets').append(container);
+            container.appendChild(originalAuthor);
+            container.appendChild(br3);
+            container.appendChild(author);
+            container.appendChild(br1);
+            container.appendChild(tweetText);
+            container.appendChild(br2);
+            container.appendChild(createdAt);
+
+            retweetData = data[i].retweeted_status;
+            
+            var tweetDisplay = linkifyTweet(retweetData);
+
+            container.className = "retweet";
+            $(originalAuthor).attr('href', "http://www.twitter.com/"+retweetData.user.screen_name);
+            $(originalAuthor).text(retweetData.user.name + ' @' + retweetData.user.screen_name);
+            $(author).attr('href', "http://www.twitter.com/"+data[i].user.screen_name);
+            $(author).text('RT:  @' + data[i].user.screen_name);
+            $(tweetText).html(tweetDisplay);
+            $(createdAt).text(data[i].created_at);
         } else {
 
-            var container = document.createElement("div");
-            var author = document.createElement("a");
-            var tweetText = document.createElement("p");
-            var createdAt = document.createElement("p");
-            var br1 = document.createElement("br");
-            var br2 = document.createElement("br");
+            
 
             $('#tweets').append(container);
             container.appendChild(author);
