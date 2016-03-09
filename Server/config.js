@@ -15,6 +15,12 @@ config.twitter = {
 	access_token_secret: 'NRk6oTICWLfAYaoLEDXuyq1AHmx4SaKEcLCR7XsnmHsnU'
 };
 
-config.mysql = {};
+config.mysql = {
+      host     : 'localhost',
+      port     : '3306',
+      user     : 'James',
+      password : 'Gamelab12//',
+      database : 'intelligentwebassignment'
+};
 
 module.exports = config;

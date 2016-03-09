@@ -11,9 +11,11 @@ var util = require('util');
 var url = require('url');
 var querystring = require('querystring');
 var Twit = require('twit');
+var mysql = require('mysql');
 var config = require('./config.js');
 
 var twitterClient = new Twit(config.twitter);
+var mySqlConnection = mysql.createConnection(config.mysql);
  
 var fileServer = new (static.Server)();
 var portNo = config.portNo;
@@ -23,6 +25,14 @@ var serverApp = protocol.createServer(function (request, response) {
 
 	if(request.method == 'GET'){
 		if(pathname != "" && pathname != null && pathname != "/"){
+			if(pathname == '/getPlayers.html'){
+				mySqlConnection.connect();
+				mySqlConnection.query("CALL get_football_players", function(error, rows){
+					console.log(error);
+					console.log(rows);
+				});
+				mySqlConnection.end();
+			}
 		} else {
 			callError(request, response);
 		}
