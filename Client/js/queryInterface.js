@@ -31,9 +31,13 @@ function sendANYAjaxQuery(url, data) {
 }
 
 function handleServerResponse(data){
+    populateRetrievedTweetDisplay(data);
+    populateTweetStatsDisplay(data);
+}
+
+function populateRetrievedTweetDisplay(data){
     var retrieved_tweet_display = $('#retrieved_tweet_display');
     var no_tweets = $('#no_tweets');
-    console.log(data)
     no_tweets.html(data.length);
 
     for(i=0; i<data.length; i++){
@@ -93,7 +97,85 @@ function handleServerResponse(data){
     }
 
     retrieved_tweet_display.css("display", "block");
+}
+
+function populateTweetStatsDisplay(data){
+    var tweet_stats_display = $('#tweet_stats_display');
+    tweet_stats_display.css("display", "block");
+
+    tweetWordsCount = {};
+
+    for(i=0; i<data.length; i++){
+        //iterate through all of the tweets and strip from them hashes, urls and mentions etc
+        var tweetWords = [];
+        if(data[i].retweeted_status != null){
+            tweetWords = stripToWords(data[i].retweeted_status);
+        } else {
+            tweetWords = stripToWords(data[i]);
+        }
+
+        tweetWords = tweetWords.filter(Boolean); //remove "" from array
+
+        //put each word into an array with its count
+        for(j=0; j<tweetWords.length; j++){
+            //if word doesn't exist in array then add it with its count
+            if(tweetWordsCount.hasOwnProperty(tweetWords[j])){
+                var word = tweetWords[j];
+                tweetWordsCount[word]++;
+            } else {
+                tweetWordsCount[tweetWords[j]] = 1;
+            }
+        }
+    }
+
+    //sort the array by count
+    wordsSorted = Object.keys(tweetWordsCount).sort(function(a,b){return tweetWordsCount[b]-tweetWordsCount[a]}).slice(0,20);
     
+    displayWords(wordsSorted, tweetWordsCount);
+}
+
+function displayWords(wordsSorted, tweetWordsCount){
+    for(i=0; i< wordsSorted.length; i++){
+        var container = document.createElement("div")
+        $('#top_words').append(container);
+
+        wordText = wordsSorted[i] + ": " + tweetWordsCount[wordsSorted[i]];
+
+        $(container).text(wordText);
+
+    }
+}
+
+
+//Removes all hashtags, urls, media links, mentions, punctuation
+//and different cases from a tweet and returns this stripped version
+function stripToWords(tweetData){
+    //remove hashes
+    var hashtagArray = tweetData.entities.hashtags;
+    var mentionsArray = tweetData.entities.user_mentions;
+    var urlsArray = tweetData.entities.urls;
+    var mediaArray = tweetData.entities.media;
+    var masterArray = [hashtagArray, mentionsArray, urlsArray];
+    var strippedTweet = tweetData.text;
+
+    if(mediaArray != null){
+        masterArray.push(mediaArray);
+    }
+
+    for(j=0; j<masterArray.length; j++){
+        array = masterArray[j];
+        for(k=0; k<array.length; k++){
+            indicesArray = array[k].indices;
+            var match = tweetData.text.substring(indicesArray[0], indicesArray[1]);
+            strippedTweet = strippedTweet.replace(match, "");
+        }
+    }
+
+    strippedTweet = strippedTweet.replace(/[^\w\s]/gi, '') //remove punctuation
+                                .replace(/\W*\b\w{1,3}\b/g, "") //remove short words (length less than 3)
+                                .replace(/\s+/g, " "); //condense large whitespaces created to a single white space
+    strippedTweet = strippedTweet.toLowerCase();
+    return strippedTweet.split(" ");
 }
 
 
