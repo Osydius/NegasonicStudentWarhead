@@ -1,3 +1,4 @@
+// SEND DATA TO SERVER-----------------------------------------------------------------------------------------------------------------
 function sendALLAjaxQuery(url, data) {
         console.log('sendAjaxQuery ' + url);
         $.ajax({
@@ -30,15 +31,69 @@ function sendANYAjaxQuery(url, data) {
 });
 }
 
+$.fn.serializeObject = function () {
+        var o = {};
+        var a = this.serializeArray();
+        $.each(a, function () {
+            if (o[this.name] !== undefined) {
+                if (!o[this.name].push) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            } else {
+                if(this.name === "players" || "hashtags" || "keywords"){
+
+                    var players = this.value
+                    var jsonfied = players.replace( /,$/, "" ).split(",");
+                    o[this.name] = jsonfied;
+                       
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            }
+        });
+        return o;
+    };
+
+    function sendData() {
+        var form = $('#myForm')
+
+        var id = event.target.id;
+        if(id == "sendALLButton"){
+            sendALLAjaxQuery('http://localhost:3000/', JSON.stringify($('form').serializeObject()));
+        } else if (id == "sendANYButton"){
+            sendANYAjaxQuery('http://localhost:3000/', JSON.stringify($('form').serializeObject()));
+        }
+
+        
+        return false;
+    }
+
+
+    var sendALLButton = document.getElementById('sendALLButton');
+    sendALLButton.onclick = sendData;
+
+    var sendANYButton = document.getElementById('sendANYButton');
+    sendANYButton.onclick = sendData;
+
+// HANDLE RESPONSE FROM SERVER ---------------------------------------------------------------------------------------------------
+
 function handleServerResponse(data){
     populateRetrievedTweetDisplay(data);
     populateTweetStatsDisplay(data);
 }
 
+//populates the tweet display, to do this all tweets must be iterated through
+//whilst iterating builds up user words object for stats
 function populateRetrievedTweetDisplay(data){
     var retrieved_tweet_display = $('#retrieved_tweet_display');
     var no_tweets = $('#no_tweets');
     no_tweets.html(data.length);
+
+    var userObject = {};
+    var tweetWordsCount = {};
+
+    console.log(data);
 
     for(i=0; i<data.length; i++){
         var container = document.createElement("div");
@@ -76,6 +131,10 @@ function populateRetrievedTweetDisplay(data){
             $(tweetText).html(tweetDisplay);
             $(createdAt).text(formattedDate);
 
+            var rtAuthorStat = data[i].user;
+            var authorStat = retweetData.user;
+            var tweetWordsStat = stripToWords(data[i]);
+
         } else {
 
             $('#tweets').append(container);
@@ -93,11 +152,94 @@ function populateRetrievedTweetDisplay(data){
             $(tweetText).html(tweetDisplay);
             $(createdAt).text(formattedDate);
 
+            //for stats make a note of the author and words in tweet
+            var rtAuthorStat = null;
+            var authorStat = data[i].user;
+            var tweetWordsStat = stripToWords(data[i]);
+
+        }
+
+        //Stats
+        //if they exist add the rtAuthor to the user object
+        if(rtAuthorStat != null){
+            //check to see if this author has already been listed in the object
+            if(!userObject.hasOwnProperty(rtAuthorStat.screen_name)) {
+                var name = String(rtAuthorStat.screen_name);
+                userObject[name] = {tweetCount: 1, words:{}};
+            } else {
+                var name = String(rtAuthorStat.screen_name);
+                var newCount = userObject[name].tweetCount + 1;
+                userObject[name].tweetCount = newCount;
+            }
+
+        }
+        
+        //add the original author to the user object
+        //add as the value of the original author the word count list for that author
+        //add the word count for that tweet to a separate word count object
+        if(!userObject.hasOwnProperty(authorStat.screen_name)){
+            var name = String(authorStat.screen_name);
+            var counts = getWordsCounts(tweetWordsStat);
+            userObject[name] = {tweetCount: 1, words: counts};
+        } else {
+            //increment the tweet count for that author
+            var name = String(authorStat.screen_name);
+            var newCount = userObject[name].tweetCount + 1;
+            userObject[name].tweetCount = newCount;
+
+            //combine counts for this tweet with existing accounts
+            var fullCount = getTotalWordCounts(userObject[name].words, getWordsCounts(tweetWordsStat));
+            userObject[name].words = fullCount;
+        }
+
+
+    }
+    //organise by tweet count to find most active 10
+    console.log(Object.keys(userObject).sort(function(a,b){return userObject[b].tweetCount-userObject[a].tweetCount}).slice(0,10))
+
+
+    //display the tweet in display window
+    retrieved_tweet_display.css("display", "block");
+}
+
+function getWordsCounts(tweetWords){
+    tweetWordsCount = {};
+    tweetWords = tweetWords.filter(Boolean); //remove "" from array
+
+        //put each word into an array with its count
+        for(j=0; j<tweetWords.length; j++){
+            //if word doesn't exist in array then add it with its count
+            if(tweetWordsCount.hasOwnProperty(tweetWords[j])){
+                var word = tweetWords[j];
+                tweetWordsCount[word]++;
+            } else {
+                tweetWordsCount[tweetWords[j]] = 1;
+            }
+        }
+    return tweetWordsCount;
+}
+
+function getTotalWordCounts(existingCounts, newCounts){
+    for(var key in newCounts){
+        if(existingCounts.hasOwnProperty(key)){
+            existingCounts[key] = existingCounts[key] + newCounts[key];
+        } else {
+            keyString = String(key);
+            existingCounts[keyString] = 1;
         }
     }
 
-    retrieved_tweet_display.css("display", "block");
+    return existingCounts;
 }
+
+
+
+
+
+
+
+
+
 
 function populateTweetStatsDisplay(data){
     var tweet_stats_display = $('#tweet_stats_display');
@@ -127,9 +269,8 @@ function populateTweetStatsDisplay(data){
             }
         }
     }
-
     //sort the array by count
-    wordsSorted = Object.keys(tweetWordsCount).sort(function(a,b){return tweetWordsCount[b]-tweetWordsCount[a]}).slice(0,20);
+    wordsSorted = Object.keys(tweetWordsCount).sort(function(a,b){return tweetWordsCount[b]-tweetWordsCount[a]}).slice(0,20); ///WHAT IF LESS THAN 20 ???
     
     displayWords(wordsSorted, tweetWordsCount);
 }
@@ -145,7 +286,6 @@ function displayWords(wordsSorted, tweetWordsCount){
 
     }
 }
-
 
 //Removes all hashtags, urls, media links, mentions, punctuation
 //and different cases from a tweet and returns this stripped version
@@ -230,50 +370,7 @@ function linkifyTweet(tweetData){
 }
 
 
-    $.fn.serializeObject = function () {
-        var o = {};
-        var a = this.serializeArray();
-        $.each(a, function () {
-            if (o[this.name] !== undefined) {
-                if (!o[this.name].push) {
-                    o[this.name] = [o[this.name]];
-                }
-                o[this.name].push(this.value || '');
-            } else {
-                if(this.name === "players" || "hashtags" || "keywords"){
-
-                    var players = this.value
-                    var jsonfied = players.replace( /,$/, "" ).split(",");
-                    o[this.name] = jsonfied;
-                       
-                } else {
-                    o[this.name] = this.value || '';
-                }
-            }
-        });
-        return o;
-    };
-
-    function sendData() {
-        var form = $('#myForm')
-
-        var id = event.target.id;
-        if(id == "sendALLButton"){
-            sendALLAjaxQuery('http://localhost:3000/', JSON.stringify($('form').serializeObject()));
-        } else if (id == "sendANYButton"){
-            sendANYAjaxQuery('http://localhost:3000/', JSON.stringify($('form').serializeObject()));
-        }
-
-        
-        return false;
-    }
-
-
-    var sendALLButton = document.getElementById('sendALLButton');
-    sendALLButton.onclick = sendData;
-
-    var sendANYButton = document.getElementById('sendANYButton');
-    sendANYButton.onclick = sendData;
+    
 
 
 
