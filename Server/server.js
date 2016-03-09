@@ -157,7 +157,7 @@ function getAnyTweets(clientData, response){
 }
 
 function queryTwitter(query, response){
-	twitterClient.get('search/tweets', { q: query, count:300 }, function(err, data, result) {
+	twitterClient.get('search/tweets', { q: query, count:100 }, function(err, data, result) {
 		// var returnTweets = [];
 		// var totalTweets = data.statuses.length;
 
@@ -173,9 +173,20 @@ function queryTwitter(query, response){
 		// }
 
   //   var returnTweets = JSON.stringify(returnTweets);
-  	var returnTweets = JSON.stringify(data.statuses);
+  	var returnTweets = data.statuses;
+  	var maxId = data.statuses[data.statuses.length - 1].id - 1;
 
-    response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-    response.end(returnTweets);
+  	twitterClient.get('search/tweets', { q: query, count:100, max_id:maxId}, function(err, data, result) {
+  		returnTweets = returnTweets.concat(data.statuses);
+  		maxId = data.statuses[data.statuses.length - 1].id - 1;
+
+  		twitterClient.get('search/tweets', { q: query, count:100, max_id:maxId}, function(err, data, result) {
+	  		returnTweets = returnTweets.concat(data.statuses);
+	  		returnTweets = JSON.stringify(returnTweets);
+
+	  		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+    		response.end(returnTweets);
+	  	});
+  	});
 	}); 
 }
