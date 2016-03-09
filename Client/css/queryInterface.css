@@ -16,9 +16,9 @@
 #retrieved_tweet_display {
 	background-color: white;
 	border-radius: 4px;
-	margin-left: 10px;
-	margin-right: 10px;
+	margin: 10px;
 	display: none;
+  padding: 10px;
 }
 
 .tweet{

@@ -102,6 +102,7 @@ function linkifyTweet(tweetData){
         }
     }
 
+    //handle urls
     var urlsArray = tweetData.entities.urls;
     if(urlsArray.length > 0){
         for(j=0; j<urlsArray.length; j++){
@@ -110,6 +111,20 @@ function linkifyTweet(tweetData){
             tweetText = tweetText.replace(url, "<a href=\""+url+"\">"+urlsArray[j].display_url+"</a>"); //should set the title attribute of a to extened_url so this is displayed when the user hovers on the link
         }
     }
+
+    //handle media, the media array only exists in entities if media is in tweet
+    var mediaArray = tweetData.entities.media;
+    if(mediaArray != null){
+        if(mediaArray.length > 0){
+            for(j=0; j<mediaArray.length; j++){
+                indicesArray = mediaArray[j].indices;
+                var media = tweetData.text.substring(indicesArray[0], indicesArray[1]);
+                tweetText = tweetText.replace(media, "<br><img src="+mediaArray[j].media_url_https+":small"+">");
+
+            }
+        }
+    }
+    
 
     return tweetText;
 }
