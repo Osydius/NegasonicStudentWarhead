@@ -19,7 +19,7 @@ config.mysql = {
       host     : 'localhost',
       port     : '3306',
       user     : 'James',
-      password : 'Gamelab12//',
+      password : '8A2b26be8d',
       database : 'intelligentwebassignment'
 };
 

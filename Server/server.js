@@ -16,6 +16,7 @@ var config = require('./config.js');
 
 var twitterClient = new Twit(config.twitter);
 var mySqlConnection = mysql.createConnection(config.mysql);
+
  
 var fileServer = new (static.Server)();
 var portNo = config.portNo;
@@ -26,12 +27,7 @@ var serverApp = protocol.createServer(function (request, response) {
 	if(request.method == 'GET'){
 		if(pathname != "" && pathname != null && pathname != "/"){
 			if(pathname == '/getPlayers.html'){
-				mySqlConnection.connect();
-				mySqlConnection.query("CALL get_football_players", function(error, rows){
-					console.log(error);
-					console.log(rows);
-				});
-				mySqlConnection.end();
+				getFootballPlayers(response);
 			}
 		} else {
 			callError(request, response);
@@ -199,4 +195,29 @@ function queryTwitter(query, response){
 	  	});
   	});
 	}); 
+}
+
+function getFootballPlayers(response){
+	mySqlConnection.connect();
+	mySqlConnection.query("CALL get_football_players", function(error, rows){
+		console.log(error);
+		var players = rows[0];
+		var returnPlayers = []
+		for(var i = 0; i < players.length; i++){
+			var newPlayer = {}
+			newPlayer.name = players[i].footballPlayerName;
+			newPlayer.twitterHandle = players[i].footballPlayerTwitterHandle;
+			returnPlayers[i] = newPlayer;
+		}
+
+		returnPlayers = JSON.stringify(returnPlayers);
+		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+		response.end(returnPlayers);
+		mySqlConnection.end();
+		mysqlReconnect();
+	});
+}
+
+function mysqlReconnect(){
+	mySqlConnection = mysql.createConnection(config.mysql);
 }
