@@ -79,22 +79,17 @@ $.fn.serializeObject = function () {
 // HANDLE RESPONSE FROM SERVER ---------------------------------------------------------------------------------------------------
 
 function handleServerResponse(data){
-    populateRetrievedTweetDisplay(data);
-    populateTweetStatsDisplay(data);
-}
-
-//populates the tweet display, to do this all tweets must be iterated through
-//whilst iterating builds up user words object for stats
-function populateRetrievedTweetDisplay(data){
     var retrieved_tweet_display = $('#retrieved_tweet_display');
     var no_tweets = $('#no_tweets');
     no_tweets.html(data.length);
 
+    //objects to collect information whilst parsing for the stats display
     var userObject = {};
     var tweetWordsCount = {};
 
     console.log(data);
 
+    //iterate through all retrieved tweets
     for(i=0; i<data.length; i++){
         var container = document.createElement("div");
         var author = document.createElement("a");
@@ -133,7 +128,7 @@ function populateRetrievedTweetDisplay(data){
 
             var rtAuthorStat = data[i].user;
             var authorStat = retweetData.user;
-            var tweetWordsStat = stripToWords(data[i]);
+            var tweetWordsStat = stripToWords(data[i]); //this will be used for both top 20 words and active users
 
         } else {
 
@@ -155,12 +150,35 @@ function populateRetrievedTweetDisplay(data){
             //for stats make a note of the author and words in tweet
             var rtAuthorStat = null;
             var authorStat = data[i].user;
-            var tweetWordsStat = stripToWords(data[i]);
+            var tweetWordsStat = stripToWords(data[i]);  //this will be used for both top 20 words and active users
 
         }
 
         //Stats
-        //if they exist add the rtAuthor to the user object
+        //TOP 20 WORDS
+        tweetWordsCount = getTotalWordCounts(tweetWordsCount, getWordsCounts(tweetWordsStat));
+
+        //10 ACTIVE USERS
+        userObject = generateUserStats(userObject, rtAuthorStat, authorStat, tweetWordsStat);
+
+    }
+
+    //display stats div
+    var tweet_stats_display = $('#tweet_stats_display');
+    tweet_stats_display.css("display", "block");
+
+    //display the 20 most used words
+    displayTopWords(tweetWordsCount);
+
+    //display the most active 10 users
+    displayActiveUsers(userObject);
+
+    //display the tweet in display window
+    retrieved_tweet_display.css("display", "block");
+}
+
+function generateUserStats(userObject, rtAuthorStat, authorStat, tweetWordsStat){
+    //if they exist add the rtAuthor to the user object
         if(rtAuthorStat != null){
             //check to see if this author has already been listed in the object
             if(!userObject.hasOwnProperty(rtAuthorStat.screen_name)) {
@@ -194,15 +212,12 @@ function populateRetrievedTweetDisplay(data){
             userObject[name].words = fullCount;
         }
 
-
-    }
-    //display the most active 10 users
-    displayActiveUsers(userObject);
-
-    //display the tweet in display window
-    retrieved_tweet_display.css("display", "block");
+    return userObject;
 }
 
+
+//takes an array of words and returns an object of each word along
+//with its count
 function getWordsCounts(tweetWords){
     tweetWordsCount = {};
     tweetWords = tweetWords.filter(Boolean); //remove "" from array
@@ -220,6 +235,7 @@ function getWordsCounts(tweetWords){
     return tweetWordsCount;
 }
 
+//takes an existing word count object and a new one and merges them together
 function getTotalWordCounts(existingCounts, newCounts){
     for(var key in newCounts){
         if(existingCounts.hasOwnProperty(key)){
@@ -233,6 +249,23 @@ function getTotalWordCounts(existingCounts, newCounts){
     return existingCounts;
 }
 
+//takes an object of all the words and their counts and displays the top 20 words
+//on the stats display
+function displayTopWords(tweetWordsCount){
+    var top20Array = Object.keys(tweetWordsCount).sort(function(a,b){return tweetWordsCount[b]-tweetWordsCount[a]}).slice(0,20);
+
+    for(i=0; i<top20Array.length; i++){
+        var container = document.createElement("div")
+        $('#top_words').append(container);
+
+        var wordText = top20Array[i] + ": " + tweetWordsCount[top20Array[i]];
+
+        $(container).text(wordText);
+    }
+}
+
+//takes a user object and iterates through this to display the 10 most active users
+//along with their profile picutres, and frequent words on the stats display
 function displayActiveUsers(userObject){
     var top10Array = Object.keys(userObject).sort(function(a,b){return userObject[b].tweetCount-userObject[a].tweetCount}).slice(0,10);
 
@@ -271,61 +304,6 @@ function displayActiveUsers(userObject){
     }
 }
 
-
-
-
-
-
-
-
-
-
-function populateTweetStatsDisplay(data){
-    var tweet_stats_display = $('#tweet_stats_display');
-    tweet_stats_display.css("display", "block");
-
-    tweetWordsCount = {};
-
-    for(i=0; i<data.length; i++){
-        //iterate through all of the tweets and strip from them hashes, urls and mentions etc
-        var tweetWords = [];
-        if(data[i].retweeted_status != null){
-            tweetWords = stripToWords(data[i].retweeted_status);
-        } else {
-            tweetWords = stripToWords(data[i]);
-        }
-
-        tweetWords = tweetWords.filter(Boolean); //remove "" from array
-
-        //put each word into an array with its count
-        for(j=0; j<tweetWords.length; j++){
-            //if word doesn't exist in array then add it with its count
-            if(tweetWordsCount.hasOwnProperty(tweetWords[j])){
-                var word = tweetWords[j];
-                tweetWordsCount[word]++;
-            } else {
-                tweetWordsCount[tweetWords[j]] = 1;
-            }
-        }
-    }
-    //sort the array by count
-    wordsSorted = Object.keys(tweetWordsCount).sort(function(a,b){return tweetWordsCount[b]-tweetWordsCount[a]}).slice(0,20); ///WHAT IF LESS THAN 20 ???
-    
-    displayWords(wordsSorted, tweetWordsCount);
-}
-
-function displayWords(wordsSorted, tweetWordsCount){
-    for(i=0; i< wordsSorted.length; i++){
-        var container = document.createElement("div")
-        $('#top_words').append(container);
-
-        wordText = wordsSorted[i] + ": " + tweetWordsCount[wordsSorted[i]];
-
-        $(container).text(wordText);
-
-    }
-}
-
 //Removes all hashtags, urls, media links, mentions, punctuation
 //and different cases from a tweet and returns this stripped version
 function stripToWords(tweetData){
@@ -357,7 +335,8 @@ function stripToWords(tweetData){
     return strippedTweet.split(" ");
 }
 
-
+//Gets tweet text and for each hash, mention, url or media makes the link work or in the case of media
+//gets the media to display
 function linkifyTweet(tweetData){
     var tweetText = tweetData.text;
 
