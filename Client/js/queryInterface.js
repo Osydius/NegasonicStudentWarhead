@@ -164,8 +164,9 @@ function populateRetrievedTweetDisplay(data){
         if(rtAuthorStat != null){
             //check to see if this author has already been listed in the object
             if(!userObject.hasOwnProperty(rtAuthorStat.screen_name)) {
+                var profileImageUrl = rtAuthorStat.profile_image_url_https;
                 var name = String(rtAuthorStat.screen_name);
-                userObject[name] = {tweetCount: 1, words:{}};
+                userObject[name] = {tweetCount: 1, profileImage: profileImageUrl, words:{}};
             } else {
                 var name = String(rtAuthorStat.screen_name);
                 var newCount = userObject[name].tweetCount + 1;
@@ -178,9 +179,10 @@ function populateRetrievedTweetDisplay(data){
         //add as the value of the original author the word count list for that author
         //add the word count for that tweet to a separate word count object
         if(!userObject.hasOwnProperty(authorStat.screen_name)){
+            var profileImageUrl = authorStat.profile_image_url_https;
             var name = String(authorStat.screen_name);
             var counts = getWordsCounts(tweetWordsStat);
-            userObject[name] = {tweetCount: 1, words: counts};
+            userObject[name] = {tweetCount: 1, profileImage: profileImageUrl, words: counts};
         } else {
             //increment the tweet count for that author
             var name = String(authorStat.screen_name);
@@ -194,9 +196,8 @@ function populateRetrievedTweetDisplay(data){
 
 
     }
-    //organise by tweet count to find most active 10
-    console.log(Object.keys(userObject).sort(function(a,b){return userObject[b].tweetCount-userObject[a].tweetCount}).slice(0,10))
-
+    //display the most active 10 users
+    displayActiveUsers(userObject);
 
     //display the tweet in display window
     retrieved_tweet_display.css("display", "block");
@@ -230,6 +231,44 @@ function getTotalWordCounts(existingCounts, newCounts){
     }
 
     return existingCounts;
+}
+
+function displayActiveUsers(userObject){
+    var top10Array = Object.keys(userObject).sort(function(a,b){return userObject[b].tweetCount-userObject[a].tweetCount}).slice(0,10);
+
+    for(i=0; i<top10Array.length; i++){
+        var container = document.createElement("div");
+        var profileImg = document.createElement("img");
+        var title = document.createElement("a");
+        var noTweets = document.createElement("p");
+        var br = document.createElement("br");
+        var body = document.createElement("p");
+        $('#top_users').append(container);
+
+        //$(container).text(string);      
+        container.appendChild(profileImg);
+        container.appendChild(title);
+        container.appendChild(noTweets);
+        container.appendChild(br);
+        container.appendChild(body);  
+
+        container.className = "userDisplay";
+        var userName = top10Array[i];
+        $(profileImg).attr('src', userObject[userName].profileImage);
+        $(title).attr('href', "http://www.twitter.com/"+userName);
+        $(title).text('@' + userName);
+        $(noTweets).text(' - ' + userObject[userName].tweetCount + ' tweets - most frequent words: ');
+
+        
+        var topWords = Object.keys(userObject[userName].words).sort(function(a,b){return userObject[userName].words[b]-userObject[userName].words[a]}).slice(0,4);
+        var topWordsString = "";
+        for(j=0; j<topWords.length; j++){
+            var word = topWords[j];
+            topWordsString = topWordsString.concat(word+ "("+userObject[userName].words[word]+") ");
+        }
+
+        $(body).text(topWordsString);
+    }
 }
 
 

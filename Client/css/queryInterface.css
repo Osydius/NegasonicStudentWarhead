@@ -38,6 +38,17 @@
   padding: 3px;
 }
 
+.userDisplay {
+    width: 400px;
+    padding: 5px;
+    overflow: hidden;
+}
+
+.userDisplay img {
+    margin-right: 15px;
+    float: left;
+}
+
 h1 {
 	margin-top: 0px;
 	color:white;
