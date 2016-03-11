@@ -13,7 +13,7 @@
 	padding:10px;
 }
 
-#retrieved_tweet_display {
+.display_tile {
 	background-color: white;
 	border-radius: 4px;
 	margin: 10px;
@@ -21,12 +21,14 @@
   padding: 10px;
 }
 
-#tweet_stats_display {
-  background-color: white;
-  border-radius: 4px;
-  margin: 10px;
-  display: none;
-  padding: 10px;
+#geo_located_display {
+  display: block;
+}
+
+#map {
+  width: 100%;
+  height: 600px;
+  background-color: #CCC;
 }
 
 .tweet{

@@ -100,6 +100,8 @@ function handleServerResponse(data){
 
         var dateArray = data[i].created_at.split(' ');
         var formattedDate = dateArray[3].slice(0,-3) + ' ' + dateArray[0] + ' ' + dateArray[2] + ' ' + dateArray[1] + ' ' + dateArray[5];
+
+        console.log(data[i].geo)
         
         if (data[i].retweeted_status != null){
             var originalAuthor = document.createElement("a");
@@ -386,6 +388,26 @@ function linkifyTweet(tweetData){
     }
     return tweetText;
 }
+
+// GOOGLE MAPS STUFF ------------------------------------------------------------------------------------------------------------------------------
+        function initialize() {
+            var myLatlng = new google.maps.LatLng(53.38108855193859, -1.4801287651062012);
+            var mapOptions = {
+                zoom: 18,
+                center: myLatlng}
+            var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+            var marker = new google.maps.Marker({
+                position: myLatlng,
+                map: map,
+                title:"here!!"});
+            var infowindow = new google.maps.InfoWindow({
+                content: 'I work at the Department of Computer Science, The University of Sheffield',
+                maxWidth:200 });
+            infowindow.open(map,marker);
+            google.maps.event.addListener(marker, 'click', function() {
+                infowindow.open(map, marker);            });
+       }
+        google.maps.event.addDomListener(window, 'load', initialize);
 
 
     

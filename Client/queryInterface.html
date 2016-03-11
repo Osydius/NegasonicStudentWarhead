@@ -3,6 +3,7 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>Football Discussions</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <link href="../bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
     <link rel="stylesheet" type="text/css" href="css/queryInterface.css">
@@ -11,6 +12,9 @@
 
 </head>
 <body>
+
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBBScut2ShlRFbesdDNk4HKWEYeUmQPDGM"></script>
+
     <div id="title_bar">
         <h1>APPLICATION NAME</h1>
         <b>Track your favourite team and find out what is happening in the world of football through twitter</b>
@@ -37,7 +41,7 @@
 
     <hr>
 
-    <div id="tweet_stats_display" >
+    <div id="tweet_stats_display" class="display_tile">
         <h3>Tweet Stats</h3>
 
         <p>Here are some stats on the tweets we've retrieved for you</p>
@@ -63,7 +67,17 @@
 
     </div>
 
-    <div id="retrieved_tweet_display" >
+    <div id="geo_located_display" class="display_tile">
+        <h3>Geolocated Tweets</h3>
+
+        <p>Find out where things are happening in the world of football</p>
+
+        <br>
+
+        <div id="map"></div>
+    </div>
+
+    <div id="retrieved_tweet_display" class="display_tile">
         <h3>Retrieved tweets</h3>
 
         <p>We found <p id="no_tweets"></p> tweets for you</p><br><br>
