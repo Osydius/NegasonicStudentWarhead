@@ -112,54 +112,60 @@ function getAllTweets(clientData, response){
 }
 
 function getAnyTweets(clientData, response){
-	var allData = JSON.parse(clientData);
+	// var allData = JSON.parse(clientData);
 
-	var twitterQuery = '';
-	var queryTeam = allData.team;
-	var queryPlayers = allData.players;
-	var queryHashtags = allData.hashtags;
-	var queryKeywords = allData.keywords;
+	// var twitterQuery = '';
+	// var queryTeam = allData.team;
+	// var queryPlayers = allData.players;
+	// var queryHashtags = allData.hashtags;
+	// var queryKeywords = allData.keywords;
 
-	twitterQuery = twitterQuery + ' from:' + queryTeam;
+	// twitterQuery = twitterQuery + ' from:' + queryTeam;
 
-	if(queryPlayers !== undefined){
-		queryPlayersCount = queryPlayers.length;
-		for(i = 0; i < queryPlayersCount; i++){
-			if(queryPlayers[i] != ""){
-				if(twitterQuery == ""){
-					twitterQuery = twitterQuery + ' from:' + queryPlayers[i];
-				} else {
-					twitterQuery = twitterQuery + ' OR from:' + queryPlayers[i];
-				}
+	// if(queryPlayers !== undefined){
+	// 	queryPlayersCount = queryPlayers.length;
+	// 	for(i = 0; i < queryPlayersCount; i++){
+	// 		if(queryPlayers[i] != ""){
+	// 			if(twitterQuery == ""){
+	// 				twitterQuery = twitterQuery + ' from:' + queryPlayers[i];
+	// 			} else {
+	// 				twitterQuery = twitterQuery + ' OR from:' + queryPlayers[i];
+	// 			}
 				
-			}
-		}
-	}
-	if(queryHashtags !== undefined){
-		queryHashtagsCount = queryHashtags.length;
-		for(i = 0; i < queryHashtagsCount; i++){
-			if(queryHashtags[i] != ""){
-				if(twitterQuery == ""){
-					twitterQuery = twitterQuery + ' from:' + queryHashtags[i];
-				} else {
-					twitterQuery = twitterQuery + ' OR from:' + queryHashtags[i];
-				}
-			}
-		}
-	}
-	if(queryKeywords !== undefined){
-		queryKeywordsCount = queryKeywords.length;
-		for(i = 0; i < queryKeywordsCount; i++){
-			if(queryKeywords[i] != ""){
-				if(twitterQuery == ""){
-					twitterQuery = twitterQuery + ' from:' + queryKeywords[i];
-				} else {
-					twitterQuery = twitterQuery + ' OR from:' + queryKeywords[i];
-				}
-			}
-		}
-	}
-	queryTwitter(twitterQuery, response);
+	// 		}
+	// 	}
+	// }
+	// if(queryHashtags !== undefined){
+	// 	queryHashtagsCount = queryHashtags.length;
+	// 	for(i = 0; i < queryHashtagsCount; i++){
+	// 		if(queryHashtags[i] != ""){
+	// 			if(twitterQuery == ""){
+	// 				twitterQuery = twitterQuery + ' from:' + queryHashtags[i];
+	// 			} else {
+	// 				twitterQuery = twitterQuery + ' OR from:' + queryHashtags[i];
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// if(queryKeywords !== undefined){
+	// 	queryKeywordsCount = queryKeywords.length;
+	// 	for(i = 0; i < queryKeywordsCount; i++){
+	// 		if(queryKeywords[i] != ""){
+	// 			if(twitterQuery == ""){
+	// 				twitterQuery = twitterQuery + ' from:' + queryKeywords[i];
+	// 			} else {
+	// 				twitterQuery = twitterQuery + ' OR from:' + queryKeywords[i];
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// queryTwitter(twitterQuery, response);
+	twitterClient.get('search/tweets', {geocode:'51.5072,0.1275,200mi', count: 100 }, function(err, data, result) {
+    tweets = JSON.stringify(data.statuses);
+
+    response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+    response.end(tweets);
+  });	
 }
 
 function queryTwitter(query, response){
@@ -200,7 +206,6 @@ function queryTwitter(query, response){
 function getFootballPlayers(response){
 	mySqlConnection.connect();
 	mySqlConnection.query("CALL get_football_players", function(error, rows){
-		console.log(error);
 		var players = rows[0];
 		var returnPlayers = []
 		for(var i = 0; i < players.length; i++){
