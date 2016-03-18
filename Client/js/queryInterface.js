@@ -81,7 +81,7 @@ $.fn.serializeObject = function () {
 // HANDLE RESPONSE FROM SERVER ---------------------------------------------------------------------------------------------------
 
 function handleServerResponse(data){
-    var retrieved_tweet_display = $('#retrieved_tweet_display');
+    
     var no_tweets = $('#no_tweets');
     no_tweets.html(data.length);
     var locatedTweetCounter = 0;
@@ -130,6 +130,7 @@ function handleServerResponse(data){
             $(author).text('RT:  @' + data[i].user.screen_name);
             $(tweetText).html(tweetDisplay);
             $(createdAt).text(formattedDate);
+            $(container).attr('class', 'tweettile');
 
             var rtAuthorStat = data[i].user;
             var authorStat = retweetData.user;
@@ -151,6 +152,7 @@ function handleServerResponse(data){
             $(author).text(data[i].user.name + ' @' + data[i].user.screen_name);
             $(tweetText).html(tweetDisplay);
             $(createdAt).text(formattedDate);
+            $(container).attr('class', 'tweettile');
 
             //for stats make a note of the author and words in tweet
             var rtAuthorStat = null;
@@ -189,7 +191,7 @@ function handleServerResponse(data){
     displayActiveUsers(userObject);
 
     //display the tweet in display window
-    retrieved_tweet_display.css("display", "block");
+    $('#tweets_display').css("display", "block");
 }
 
 function generateUserStats(userObject, rtAuthorStat, authorStat, tweetWordsStat){
@@ -318,7 +320,7 @@ function displayActiveUsers(userObject){
         $(title).attr('href', "http://www.twitter.com/"+userName);
         $(title).text('@' + userName);
         $(imgConatiner).attr('float','left');
-        $(imgConatiner).attr('width', '48px');
+        $(imgConatiner).attr('style', 'width:48px');
         $(innerContainer).attr('float', 'left');
         
         $(noTweets).text(' - ' + userObject[userName].tweetCount + ' tweets - most frequent words: ');

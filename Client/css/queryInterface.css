@@ -21,6 +21,13 @@
   padding: 10px;
 }
 
+#retrieved_tweet_display {
+  overflow-y: auto;
+  height: 500px;
+  clear:both;
+  width: 80%;
+}
+
 #top_words{
   border-radius: 4px;
   background: #333333; /* For browsers that do not support gradients */
@@ -75,13 +82,11 @@
   margin-right: auto;
 }
 
-.tweet{
-	border:1px solid black;
-	padding: 3px;
-}
-.retweet{
-  border:1px solid black;
-  padding: 3px;
+.tweettile{
+  padding: 5px;
+  margin-bottom:2px;
+  border-radius: 4px;
+  border: 1px solid #cccccc;
 }
 
 .userDisplay {
