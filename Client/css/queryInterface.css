@@ -21,14 +21,14 @@
   padding: 10px;
 }
 
-#geo_located_display {
-  display: block;
-}
+
 
 #map {
-  width: 100%;
+  width: 85%;
   height: 600px;
   background-color: #CCC;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .tweet{

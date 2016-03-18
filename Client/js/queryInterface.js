@@ -76,12 +76,15 @@ $.fn.serializeObject = function () {
     var sendANYButton = document.getElementById('sendANYButton');
     sendANYButton.onclick = sendData;
 
+
+
 // HANDLE RESPONSE FROM SERVER ---------------------------------------------------------------------------------------------------
 
 function handleServerResponse(data){
     var retrieved_tweet_display = $('#retrieved_tweet_display');
     var no_tweets = $('#no_tweets');
     no_tweets.html(data.length);
+    var locatedTweetCounter = 0;
 
     //objects to collect information whilst parsing for the stats display
     var userObject = {};
@@ -101,7 +104,7 @@ function handleServerResponse(data){
         var dateArray = data[i].created_at.split(' ');
         var formattedDate = dateArray[3].slice(0,-3) + ' ' + dateArray[0] + ' ' + dateArray[2] + ' ' + dateArray[1] + ' ' + dateArray[5];
 
-        console.log(data[i].geo)
+        //console.log(data[i].coordinates)
         
         if (data[i].retweeted_status != null){
             var originalAuthor = document.createElement("a");
@@ -163,7 +166,15 @@ function handleServerResponse(data){
         //10 ACTIVE USERS
         userObject = generateUserStats(userObject, rtAuthorStat, authorStat, tweetWordsStat);
 
+        if(data[i].coordinates != null){
+            generateMapMarker(data[i].coordinates, tweetDisplay);
+            locatedTweetCounter++;
+        }
+
     }
+
+    //set the number of located tweets string
+    $('#no_located_tweets').html(locatedTweetCounter);
 
     //display stats div
     var tweet_stats_display = $('#tweet_stats_display');
@@ -390,25 +401,31 @@ function linkifyTweet(tweetData){
 }
 
 // GOOGLE MAPS STUFF ------------------------------------------------------------------------------------------------------------------------------
-        function initialize() {
-            var myLatlng = new google.maps.LatLng(53.38108855193859, -1.4801287651062012);
-            var mapOptions = {
-                zoom: 18,
+        //Global variable for the map
+        var myLatlng = new google.maps.LatLng(54.504682, -0.436730);
+        var mapOptions = {
+                zoom: 6,
                 center: myLatlng}
-            var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+        var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+
+
+
+
+        function generateMapMarker(coordinatesObject, tweetDispley){
+            var lat = coordinatesObject.coordinates[1];
+            var long = coordinatesObject.coordinates[0];
+            var myLatlng = new google.maps.LatLng(lat, long);
             var marker = new google.maps.Marker({
                 position: myLatlng,
                 map: map,
-                title:"here!!"});
+                title:"tweet"});
             var infowindow = new google.maps.InfoWindow({
-                content: 'I work at the Department of Computer Science, The University of Sheffield',
+                content: tweetDispley,
                 maxWidth:200 });
-            infowindow.open(map,marker);
-            google.maps.event.addListener(marker, 'click', function() {
+              google.maps.event.addListener(marker, 'click', function() {
                 infowindow.open(map, marker);            });
-       }
-        google.maps.event.addDomListener(window, 'load', initialize);
-
+        }
 
     
 
