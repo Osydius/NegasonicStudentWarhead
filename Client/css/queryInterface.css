@@ -33,6 +33,25 @@
   color: white;
 }
 
+
+#top_users{
+  color:white;
+  background-color: #333333;
+  border-radius: 4px;
+  padding: 10px;
+
+  float:left;
+  overflow-y: auto;
+  height: 441px;
+}
+
+.usertile{
+  background-color: #4d4d4d;
+  border-radius: 4px;
+  padding: 5px;
+  margin-bottom: 2px;
+}
+
 .place0{
   color: #BAB407;
   font-size: 120%;

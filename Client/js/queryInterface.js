@@ -292,6 +292,8 @@ function displayActiveUsers(userObject){
 
     for(i=0; i<top10Array.length; i++){
         var container = document.createElement("div");
+        var innerContainer = document.createElement("div");
+        var imgConatiner = document.createElement("div");
         var profileImg = document.createElement("img");
         var title = document.createElement("a");
         var noTweets = document.createElement("p");
@@ -299,19 +301,32 @@ function displayActiveUsers(userObject){
         var body = document.createElement("p");
         $('#top_users').append(container);
 
-        //$(container).text(string);      
-        container.appendChild(profileImg);
-        container.appendChild(title);
-        container.appendChild(noTweets);
-        container.appendChild(br);
-        container.appendChild(body);  
+        //$(container).text(string);    
+        innerContainer.appendChild(title);
+        innerContainer.appendChild(noTweets);
+        innerContainer.appendChild(br);
+        innerContainer.appendChild(body); 
+        imgConatiner.appendChild(profileImg); 
+        container.appendChild(imgConatiner);
+        container.appendChild(innerContainer);  
 
         container.className = "userDisplay";
         var userName = top10Array[i];
+        $(container).attr('class', 'usertile');
         $(profileImg).attr('src', userObject[userName].profileImage);
+        $(profileImg).attr('float','left');
         $(title).attr('href', "http://www.twitter.com/"+userName);
         $(title).text('@' + userName);
+        $(imgConatiner).attr('float','left');
+        $(imgConatiner).attr('width', '48px');
+        $(innerContainer).attr('float', 'left');
+        
         $(noTweets).text(' - ' + userObject[userName].tweetCount + ' tweets - most frequent words: ');
+
+        //if it is 1st, 2nd or 3rd add special class
+        if(i==0||i==1||i==2){
+            $(container).attr('class', 'place'+i + ' usertile');
+        }
 
         
         var topWords = Object.keys(userObject[userName].words).sort(function(a,b){return userObject[userName].words[b]-userObject[userName].words[a]}).slice(0,4);
