@@ -175,6 +175,8 @@ function handleServerResponse(data){
 
     //set the number of located tweets string
     $('#no_located_tweets').html(locatedTweetCounter);
+    $('#geo_located_display').css("display", "block");
+    initializeMap();
 
     //display stats div
     var tweet_stats_display = $('#tweet_stats_display');
@@ -270,6 +272,12 @@ function displayTopWords(tweetWordsCount){
     for(i=0; i<top20Array.length; i++){
         var container = document.createElement("div")
         $('#top_words').append(container);
+
+        //give the text the appropriate class so that it can be displayed with the correct color
+        if(i==0||i==1||i==2){
+            //one of the top 3 words so will have special display properties
+            $(container).attr('class', 'place'+i);
+        }
 
         var wordText = top20Array[i] + ": " + tweetWordsCount[top20Array[i]];
 
@@ -408,8 +416,13 @@ function linkifyTweet(tweetData){
                 center: myLatlng}
         var map = new google.maps.Map(document.getElementById("map"), mapOptions);
 
-
-
+        function initializeMap(){
+            var myLatlng = new google.maps.LatLng(54.504682, -0.436730);
+            var mapOptions = {
+                zoom: 6,
+                center: myLatlng}
+            var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+        }
 
 
         function generateMapMarker(coordinatesObject, tweetDispley){

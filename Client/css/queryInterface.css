@@ -21,7 +21,32 @@
   padding: 10px;
 }
 
+#top_words{
+  border-radius: 4px;
+  background: #333333; /* For browsers that do not support gradients */
+  background: -webkit-linear-gradient(#333333, #808080); /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(#333333, #808080); /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(#333333, #808080); /* For Firefox 3.6 to 15 */
+  background: linear-gradient(#333333, #808080); /* Standard syntax */
+  padding: 10px;
+  border: 1px solid #333333;
+  color: white;
+}
 
+.place0{
+  color: #BAB407;
+  font-size: 120%;
+}
+
+.place1{
+  color: #B0B0B0;
+  font-size: 120%;
+}
+
+.place2{
+  color: #cd7f32;
+  font-size: 120%;
+}
 
 #map {
   width: 85%;
