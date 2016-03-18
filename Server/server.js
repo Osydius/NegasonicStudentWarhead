@@ -160,11 +160,11 @@ function getAnyTweets(clientData, response){
 	// 	}
 	// }
 	// queryTwitter(twitterQuery, response);
-	twitterClient.get('search/tweets', {geocode:'51.5072,0.1275,200mi', count: 100 }, function(err, data, result) {
-    tweets = JSON.stringify(data.statuses);
+	twitterClient.get('search/tweets', {q: 'drone', geocode:'51.5072,0.1275,200mi', count: 100 }, function(err, data, result) {
+	    tweets = JSON.stringify(data.statuses);
 
-    response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-    response.end(tweets);
+	    response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+	    response.end(tweets);
   });	
 }
 
