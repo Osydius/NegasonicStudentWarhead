@@ -95,6 +95,8 @@ function handleServerResponse(data){
     //iterate through all retrieved tweets
     for(i=0; i<data.length; i++){
         var container = document.createElement("div");
+        var innerContainer = document.createElement("div");
+        var profileImg = document.createElement("img");
         var author = document.createElement("a");
         var tweetText = document.createElement("p");
         var createdAt = document.createElement("p");
@@ -111,13 +113,16 @@ function handleServerResponse(data){
             var br3 = document.createElement("br");
 
             $('#tweets').append(container);
-            container.appendChild(originalAuthor);
-            container.appendChild(br3);
-            container.appendChild(author);
-            container.appendChild(br1);
-            container.appendChild(tweetText);
-            container.appendChild(br2);
-            container.appendChild(createdAt);
+
+            container.appendChild(profileImg);
+            container.appendChild(innerContainer);
+            innerContainer.appendChild(originalAuthor);
+            innerContainer.appendChild(br3);
+            innerContainer.appendChild(author);
+            innerContainer.appendChild(br1);
+            innerContainer.appendChild(tweetText);
+            innerContainer.appendChild(br2);
+            innerContainer.appendChild(createdAt);
 
             retweetData = data[i].retweeted_status;
             
@@ -131,6 +136,8 @@ function handleServerResponse(data){
             $(tweetText).html(tweetDisplay);
             $(createdAt).text(formattedDate);
             $(container).attr('class', 'tweettile');
+            $(profileImg).attr('src', data[i].retweeted_status.user.profile_image_url_https);
+            $(profileImg).attr('style','float:left;');
 
             var rtAuthorStat = data[i].user;
             var authorStat = retweetData.user;
@@ -139,11 +146,13 @@ function handleServerResponse(data){
         } else {
 
             $('#tweets').append(container);
-            container.appendChild(author);
-            container.appendChild(br1);
-            container.appendChild(tweetText);
-            container.appendChild(br2);
-            container.appendChild(createdAt);
+            container.appendChild(profileImg);
+            container.appendChild(innerContainer);
+            innerContainer.appendChild(author);
+            innerContainer.appendChild(br1);
+            innerContainer.appendChild(tweetText);
+            innerContainer.appendChild(br2);
+            innerContainer.appendChild(createdAt);
 
             var tweetDisplay = linkifyTweet(data[i]);
 
@@ -153,6 +162,9 @@ function handleServerResponse(data){
             $(tweetText).html(tweetDisplay);
             $(createdAt).text(formattedDate);
             $(container).attr('class', 'tweettile');
+            $(profileImg).attr('src', data[i].user.profile_image_url_https);
+            $(profileImg).attr('style','float:left;');
+            $(innerContainer).attr('style', 'margin-left: 58px;')
 
             //for stats make a note of the author and words in tweet
             var rtAuthorStat = null;
@@ -181,8 +193,7 @@ function handleServerResponse(data){
     initializeMap();
 
     //display stats div
-    var tweet_stats_display = $('#tweet_stats_display');
-    tweet_stats_display.css("display", "block");
+    $('#tweet_stats_display').css("display", "block");
 
     //display the 20 most used words
     displayTopWords(tweetWordsCount);
@@ -294,8 +305,6 @@ function displayActiveUsers(userObject){
 
     for(i=0; i<top10Array.length; i++){
         var container = document.createElement("div");
-        var innerContainer = document.createElement("div");
-        var imgConatiner = document.createElement("div");
         var profileImg = document.createElement("img");
         var title = document.createElement("a");
         var noTweets = document.createElement("p");
@@ -303,25 +312,21 @@ function displayActiveUsers(userObject){
         var body = document.createElement("p");
         $('#top_users').append(container);
 
-        //$(container).text(string);    
-        innerContainer.appendChild(title);
-        innerContainer.appendChild(noTweets);
-        innerContainer.appendChild(br);
-        innerContainer.appendChild(body); 
-        imgConatiner.appendChild(profileImg); 
-        container.appendChild(imgConatiner);
-        container.appendChild(innerContainer);  
+        //$(container).text(string); 
+        container.appendChild(profileImg);   
+        container.appendChild(title);
+        container.appendChild(noTweets);
+        container.appendChild(br);
+        container.appendChild(body); 
+          
 
         container.className = "userDisplay";
         var userName = top10Array[i];
         $(container).attr('class', 'usertile');
         $(profileImg).attr('src', userObject[userName].profileImage);
-        $(profileImg).attr('float','left');
+        $(profileImg).attr('style','float:left;');
         $(title).attr('href', "http://www.twitter.com/"+userName);
         $(title).text('@' + userName);
-        $(imgConatiner).attr('float','left');
-        $(imgConatiner).attr('style', 'width:48px');
-        $(innerContainer).attr('float', 'left');
         
         $(noTweets).text(' - ' + userObject[userName].tweetCount + ' tweets - most frequent words: ');
 
