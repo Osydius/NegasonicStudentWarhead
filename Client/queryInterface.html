@@ -9,8 +9,8 @@
     <link rel="stylesheet" type="text/css" href="css/queryInterface.css">
     <!-- for the font -->
     <link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
-
 </head>
+
 <body>
 
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBBScut2ShlRFbesdDNk4HKWEYeUmQPDGM"></script>
@@ -22,7 +22,6 @@
 
     <div id="track_discussions_form">
         <h3>Find out what's happening</h3>
-        
 
         <form id="myForm" onsubmit="sendData">
             Team <input type="text" name="team" class = "field" value="ManUtd">
@@ -50,17 +49,15 @@
             <tbody>
                 <tr>
                     <td >
-                        
-        
                         <div id="top_words">
                             <h4>Top 20 Words</h4>
                         </div>
                     </td>
                 
                     <td >
+                        <!--Surround this display in a container so only the inner contents scroll-->
                         <div id = "top_users_container">
                             <h4>10 Most active users</h4>
-
                             <div id="top_users"> 
                             </div>
                         </div>
@@ -72,8 +69,8 @@
     </div>
 
     <div id="tweets_display" class= "display_tile">
-    <h3>Retrieved tweets</h3>
-            <p>We found <p id="no_tweets"></p> tweets for you</p><br><br>
+        <h3>Retrieved tweets</h3>
+        <p>We found <p id="no_tweets"></p> tweets for you</p><br><br>
 
         <div id="retrieved_tweet_display" >
             <div id="tweets">
@@ -83,7 +80,6 @@
 
     <div id="geo_located_display" class="display_tile">
         <h3>Geolocated Tweets</h3>
-
         <p>We found <p id="no_located_tweets"></p>  located tweets for you</p>
 
         <br><br>

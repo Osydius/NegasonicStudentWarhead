@@ -1,33 +1,67 @@
+/* CSS for default elements */
+h1 {
+  margin-top: 0px;
+  color:white;
+}
+
+body {
+  background-color: #f2f2f2;
+  font-family: 'Oswald', sans-serif;
+}
+
+hr{
+  margin:0px;
+  padding:0px;
+  color: #ff9933;
+  background-color: #ff9933;
+  height: 5px;
+  border: none;
+}
+
+p{
+  margin: 0px;
+  padding: 0px;
+  display:inline;
+}
+
+img{
+  margin-right: 5px;
+  clear:both;
+}
+
+/* Form and title bar at the top of the page */
+#title_bar {
+  background-color: #004d1a;
+  color:white;
+  padding:10px;
+}
+
 #track_discussions_form {
 	text-align: center;
-    background-color: #009933;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    color: white;
-    margin:0px;
+  background-color: #009933;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  color: white;
+  margin:0px;
 }
 
-#title_bar {
-	background-color: #004d1a;
-	color:white;
-	padding:10px;
+/* Gold, Silver, Bronze place styles */
+.place0{
+  color: #BAB407;
+  font-size: 120%;
 }
 
-.display_tile {
-	background-color: white;
-	border-radius: 4px;
-	margin: 10px;
-	display: none;
-  padding: 10px;
+.place1{
+  color: #B0B0B0;
+  font-size: 120%;
 }
 
-#retrieved_tweet_display {
-  overflow-y: auto;
-  height: 500px;
-  clear:both;
-  width: 80%;
+.place2{
+  color: #cd7f32;
+  font-size: 120%;
 }
 
+/* Top words display */
 #top_words{
   border-radius: 4px;
   background: #333333; /* For browsers that do not support gradients */
@@ -40,6 +74,7 @@
   color: white;
 }
 
+/* Top 10 Users*/
 #top_users_container{
   color:white;
   background-color: #333333;
@@ -62,41 +97,6 @@
   height:55px;
 }
 
-.place0{
-  color: #BAB407;
-  font-size: 120%;
-}
-
-.place1{
-  color: #B0B0B0;
-  font-size: 120%;
-}
-
-.place2{
-  color: #cd7f32;
-  font-size: 120%;
-}
-
-#map {
-  width: 85%;
-  height: 600px;
-  background-color: #CCC;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-img{
-  margin-right: 5px;
-  clear:both;
-}
-
-.tweettile{
-  padding: 5px;
-  margin-bottom:2px;
-  border-radius: 4px;
-  border: 1px solid #cccccc;
-}
-
 .userDisplay {
     width: 400px;
     padding: 5px;
@@ -108,30 +108,38 @@ img{
     float: left;
 }
 
-h1 {
-	margin-top: 0px;
-	color:white;
+#map {
+  width: 85%;
+  height: 600px;
+  background-color: #CCC;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-body {
-	background-color: #f2f2f2;
-	font-family: 'Oswald', sans-serif;
+.display_tile {
+  background-color: white;
+  border-radius: 4px;
+  margin: 10px;
+  display: none;
+  padding: 10px;
 }
 
-hr{
-	margin:0px;
-	padding:0px;
-	color: #ff9933;
-	background-color: #ff9933;
-	height: 5px;
-	border: none;
+/* Tweet display */
+#retrieved_tweet_display {
+  overflow-y: auto;
+  height: 500px;
+  clear:both;
+  width: 80%;
 }
 
-p{
-	margin: 0px;
-	padding: 0px;
-	display:inline;
+.tweettile{
+  padding: 5px;
+  margin-bottom:2px;
+  border-radius: 4px;
+  border: 1px solid #cccccc;
 }
+
+/* Styles for the form fields and buttons */
 
 .field {
 	/*outline: #ff9933 solid medium;*/
@@ -151,8 +159,6 @@ input[type=text] {
 input[type=text]:focus {
     box-shadow: 0 0 0 2pt #ff9933;
 }
-
-
 
 .btn-custom {
   font-family: 'Oswald', sans-serif;
