@@ -1,8 +1,10 @@
 // SEND DATA TO SERVER-----------------------------------------------------------------------------------------------------------------
 function sendALLAjaxQuery(url, data) {
         console.log('sendAjaxQuery ' + url);
+        console.log(data);
         $.ajax({
             dataType: 'json',
+            contentType: "application/json",
             type: 'POST',
             url: url+'getAllTweets.html',
             data: data,
@@ -19,6 +21,7 @@ function sendALLAjaxQuery(url, data) {
 function sendANYAjaxQuery(url, data) {
     $.ajax({
         dataType: 'json',
+        contentType: "application/json",
         data: data,
         type: 'POST',
         url: url + 'getAnyTweets.html',
