@@ -459,10 +459,31 @@ function generateMapMarker(coordinatesObject, tweetDispley){
 
 // AUTOCOMPLETE JQUERY PLUGIN -----------------------------------------------------------------------------------------------------
 
+//autocomplete the team
+/**
+$(document).ready(function() {
+    $.ajax({
+            type: 'GET',
+            url: 'http://localhost:3000/getClubs.html',
+            success: function (data) {
+                var clubs =[]
+                for(i=0; i<data.length; i++){
+                    clubs.push(data[i].name);
+                }
+                $( "#team" ).autocomplete({
+               source: clubs
+            });
+            },
+            error: function (xhr, status, error) {
+                console.log('Error: ' + error.message);
+               
+            }
+    });
+});
+*/
 
-
+/**
 //autocomplete the players
-
 $(document).ready(function() {
     $.ajax({
             type: 'GET',
@@ -483,7 +504,7 @@ $(document).ready(function() {
     });
 });
 
-
+*/
 
 
 
