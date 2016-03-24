@@ -1,7 +1,6 @@
 // SEND DATA TO SERVER-----------------------------------------------------------------------------------------------------------------
 function sendALLAjaxQuery(url, data) {
-        console.log('sendAjaxQuery ' + url);
-        console.log(data);
+    console.log(url)
         $.ajax({
             dataType: 'json',
             contentType: "application/json",
@@ -427,7 +426,7 @@ function linkifyTweet(tweetData){
 }
 
 // GOOGLE MAPS STUFF ------------------------------------------------------------------------------------------------------------------------------
-        //Global variable for the map
+//Global variable for the map
 var myLatlng = new google.maps.LatLng(54.504682, -0.436730);
 var mapOptions = {
     zoom: 6,
@@ -455,10 +454,30 @@ function generateMapMarker(coordinatesObject, tweetDispley){
         content: tweetDispley,
         maxWidth:200 });
     google.maps.event.addListener(marker, 'click', function() {
-        infowindow.open(map, marker);});
+    infowindow.open(map, marker);});
 }
 
-    
+// AUTOCOMPLETE JQUERY PLUGIN -----------------------------------------------------------------------------------------------------
+
+
+
+//autocomplete the players
+
+$(document).ready(function() {
+    $.ajax({
+            type: 'GET',
+            url: 'http://localhost:3000/getPlayers.html',
+            success: function (data) {
+                $( "#players" ).autocomplete({
+               source: data
+            });
+            },
+            error: function (xhr, status, error) {
+                console.log('Error: ' + error.message);
+               
+            }
+    });
+});
 
 
 

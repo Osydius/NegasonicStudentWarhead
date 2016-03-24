@@ -7,6 +7,9 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <link href="../bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
     <link rel="stylesheet" type="text/css" href="css/queryInterface.css">
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.structure.css">
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.theme.css">
     <!-- for the font -->
     <link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
 </head>
@@ -24,13 +27,13 @@
         <h3>Find out what's happening</h3>
 
         <form id="myForm" onsubmit="sendData">
-            Team <input type="text" name="team" class = "field" value="ManUtd">
+            Team <input type="text" name="team" class = "field" id="team">
             <br>
-            Players <input type="text" name="players" class = "field">
+            Players <input type="text" name="players" class = "field" id="players">
             <br>
-            Hashtags <input type="text" name="hashtags" class = "field">
+            Hashtags <input type="text" name="hashtags" class = "field"> (Enter Hashtags separated by commas)
             <br>
-            Keywords <input type="text" name="keywords" class = "field">
+            Keywords <input type="text" name="keywords" class = "field" style="align-content: center;"> (Enter Keywords separated by commas)
             <br>
             <br><br>
             <button id="sendALLButton" class="btn btn-custom">Get tweets that contain ALL of these terms</button>
@@ -88,6 +91,7 @@
     </div>
 
 <script src="js/queryInterface.js"></script>
+<script src="js/jquery-ui.js"></script>
 <script src="../bootstrap/js/bootstrap.min.js"></script>
 
 </body>
