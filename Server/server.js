@@ -19,6 +19,7 @@ var config = require('./config.js');
 
 var twitterClient = new Twit(config.twitter);
 var mySqlConnection = mysql.createConnection(config.mysql);
+mySqlConnection.connect();
 
 var fileServer = new (static.Server)();
 var portNo = config.portNo;
@@ -32,9 +33,19 @@ app.use(cors());
 
 var server = app.listen(portNo);
 
+// listen for TERM signal .e.g. kill 
+process.on ('SIGTERM', gracefulShutdown);
+
+// listen for INT signal e.g. Ctrl-C
+process.on ('SIGINT', gracefulShutdown); 
+
 /********** GET METHODS **********/
 app.get('/getPlayers.html', function (request, response) {
 	getFootballPlayers(response);
+})
+
+app.get('/getClubs.html', function (request, response) {
+	getFootballClubs(response);
 })
 
 /********** POST METHODS **********/
@@ -148,6 +159,12 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets){
 				console.log(error);
 			} else if(data.statuses != undefined){
 				if(data.statuses.length > 0){
+					// add tweets to database
+					data.statuses.forEach(function(tweet){
+						insertNewTweets(tweet);
+					})
+
+					// build return tweets
 					returnedTweets = data.statuses;
 					var maxId = data.statuses[data.statuses.length - 1].id - 1;
 					if(returnedTweets != undefined && returnedTweets.length < totalTweets && data.statuses.length == maxRetrievableTweets){
@@ -209,9 +226,8 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets){
 }
 
 function getFootballPlayers(response){
-	mySqlConnection.connect();
-	mySqlConnection.query("CALL get_football_players", function(error, rows){
-		var players = rows[0];
+	mySqlConnection.query("SELECT * FROM footballplayers", function(error, rows){
+		var players = rows;
 		var returnPlayers = []
 		for(var i = 0; i < players.length; i++){
 			var newPlayer = {}
@@ -223,31 +239,64 @@ function getFootballPlayers(response){
 		returnPlayers = JSON.stringify(returnPlayers);
 		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 		response.end(returnPlayers);
-		mySqlConnection.end();
-		mysqlReconnect();
 	});
 }
 
 function getFootballClubs(response){
-	mySqlConnection.connect();
-	mySqlConnection.query("CALL get_football_clubs", function(error, rows){
-		var clubs = rows[0];
+	mySqlConnection.query("SELECT * FROM footballclubs", function(error, rows){
+		var clubs = rows;
 		var returnClubs = []
-		for(var i = 0; i < players.length; i++){
+		for(var i = 0; i < clubs.length; i++){
 			var newClub = {}
 			newClub.name = clubs[i].footballClubName;
 			newClub.twitterHandle = clubs[i].footballClubTwitterHandle;
 			returnClubs[i] = newPlayer;
 		}
 
-		returnPlayers = JSON.stringify(returnPlayers);
+		returnClubs = JSON.stringify(returnClubs);
 		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-		response.end(returnPlayers);
-		mySqlConnection.end();
-		mysqlReconnect();
+		response.end(returnClubs);
 	});
 }
 
-function mysqlReconnect(){
-	mySqlConnection = mysql.createConnection(config.mysql);
+function insertNewTweets(tweetInfo){
+	var newInfo = tweetInfo;
+
+	var query = "";
+
+	// check user doesn't already exist
+	twitterUserTwitterID = tweetInfo.user.id
+	query = "IF NOT EXISTS(SELECT * FROM twitterusers WHERE twitterUserTwitterID = " + twitterUserTwitterID + ")";
+	query = query + " BEGIN";
+
+	// if user doesn't exist, insert into database
+	twitterUserName = tweetInfo.user.name;
+	twitterUserScreenName = tweetInfo.user.screen_name;
+	query = query + " INSERT INTO twitterusers (twitterUserName, twitterUserScreenName, twitterUserTwitterID) VALUES (" + twitterUserName + ", " + twitterUserScreenName + ", " + twitterUserTwitterID + ")";
+	query = query + " END"
+
+	//check user is in the database
+	query = query + " IF EXISTS(SELECT * FROM twitterusers WHERE twitterUserTwitterID = " + twitterUserTwitterID + ")";
+	query = query + " BEGIN"
+
+	query = query + " END"
+
+	// mySqlConnection.query(/* query */, function(error, result){
+	// 	console.log(result);
+	// })
+}
+
+function gracefulShutdown(){
+	console.log("Received kill signal, shutting down gracefully.");
+	mySqlConnection.end();
+	server.close(function() {
+		console.log("Closed out remaining connections.");
+		process.exit()
+	});
+  
+	// if after 
+	setTimeout(function() {
+	   console.error("Could not close connections in time, forcefully shutting down");
+	   process.exit()
+	}, 10*1000);
 }
