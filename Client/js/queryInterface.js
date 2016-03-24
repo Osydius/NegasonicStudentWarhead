@@ -468,8 +468,12 @@ $(document).ready(function() {
             type: 'GET',
             url: 'http://localhost:3000/getPlayers.html',
             success: function (data) {
+                var players =[]
+                for(i=0; i<data.length; i++){
+                    players.push(data[i].name);
+                }
                 $( "#players" ).autocomplete({
-               source: data
+               source: players
             });
             },
             error: function (xhr, status, error) {
