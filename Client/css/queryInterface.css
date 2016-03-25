@@ -140,9 +140,22 @@ img{
 }
 
 /* Styles for the form fields and buttons */
+#inputTable{
+  width:100%;
+}
 
-.field {
-	/*outline: #ff9933 solid medium;*/
+.namefield{
+  width: 40%;
+  text-align: right;
+}
+
+.inputfield{
+  width: 20%;
+}
+
+.descfield{
+  width:40%;
+  text-align: left;
 }
 
 

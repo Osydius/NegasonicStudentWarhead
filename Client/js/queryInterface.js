@@ -136,6 +136,7 @@ function handleServerResponse(data){
             $(container).attr('class', 'tweettile');
             $(profileImg).attr('src', data[i].retweeted_status.user.profile_image_url_https);
             $(profileImg).attr('style','float:left;');
+            $(innerContainer).attr('style', 'margin-left: 58px;');
 
             var rtAuthorStat = data[i].user;
             var authorStat = retweetData.user;
@@ -162,7 +163,7 @@ function handleServerResponse(data){
             $(container).attr('class', 'tweettile');
             $(profileImg).attr('src', data[i].user.profile_image_url_https);
             $(profileImg).attr('style','float:left;');
-            $(innerContainer).attr('style', 'margin-left: 58px;')
+            $(innerContainer).attr('style', 'margin-left: 58px;');
 
             //for stats make a note of the author and words in tweet
             var rtAuthorStat = null;
