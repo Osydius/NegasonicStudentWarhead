@@ -83,6 +83,9 @@ $.fn.serializeObject = function () {
 // HANDLE RESPONSE FROM SERVER ---------------------------------------------------------------------------------------------------
 function handleServerResponse(data){
     $('#no_tweets').html(data.length);
+
+    //remove any old tweets
+    $('.tweettile').remove();
     
     //objects to collect information whilst parsing for the stats display
     var userObject = {};
@@ -279,19 +282,21 @@ function getTotalWordCounts(existingCounts, newCounts){
 //on the stats display
 function displayTopWords(tweetWordsCount){
     var top20Array = Object.keys(tweetWordsCount).sort(function(a,b){return tweetWordsCount[b]-tweetWordsCount[a]}).slice(0,20);
-
+    $('.top20wordsdisplay').remove();
     for(i=0; i<top20Array.length; i++){
         var container = document.createElement("div")
+        
         $('#top_words').append(container);
-
+        $(container).attr('class', 'top20wordsdisplay');
         //give the text the appropriate class so that it can be displayed with the correct color
         if(i==0||i==1||i==2){
             //one of the top 3 words so will have special display properties
-            $(container).attr('class', 'place'+i);
+            $(container).attr('class', 'place'+i+' top20wordsdisplay');
         }
 
         var wordText = top20Array[i] + ": " + tweetWordsCount[top20Array[i]];
         $(container).text(wordText);
+        
     }
 }
 
@@ -299,7 +304,7 @@ function displayTopWords(tweetWordsCount){
 //along with their profile picutres, and frequent words on the stats display
 function displayActiveUsers(userObject){
     var top10Array = Object.keys(userObject).sort(function(a,b){return userObject[b].tweetCount-userObject[a].tweetCount}).slice(0,10);
-
+    $('.usertile').remove();
     for(i=0; i<top10Array.length; i++){
         var container = document.createElement("div");
         var profileImg = document.createElement("img");
