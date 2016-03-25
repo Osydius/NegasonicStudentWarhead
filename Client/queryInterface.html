@@ -25,20 +25,41 @@
 
     <div id="track_discussions_form">
         <h3>Find out what's happening</h3>
-
+        <br>
         <form id="myForm" onsubmit="sendData">
-            Team <input type="text" name="team" class = "field" id="team">
-            <br>
-            Players <input type="text" name="players" class = "field" id="players">
-            <br>
-            Hashtags <input type="text" name="hashtags" class = "field"> (Enter Hashtags separated by commas)
-            <br>
-            Keywords <input type="text" name="keywords" class = "field" style="align-content: center;"> (Enter Keywords separated by commas)
-            <br>
+            <table id="inputTable">
+                <tr>
+                    <td class="namefield">Team: </td>
+                    <td class="inputfield"><input type="text" name="team" class = "field" id="team"></td>
+                    <td class="descfield"></td>
+                    
+                </tr>
+                <tr>
+                    <td class="namefield">Players: </td>
+                    <td class="inputfield"><input type="text" name="players" class = "field" id="players"></td>
+                    <td class="descfield">(Enter Players separated by commas)</td>
+                    
+                </tr>
+                <tr>
+                    <td class="namefield">Hashtags: </td>
+                    <td class="inputfield"><input type="text" name="hashtags" class = "field"></td>
+                    <td class="descfield">(Enter Hashtags separated by commas)</td>
+                    
+                </tr>
+                <tr>
+                    <td class="namefield">Keywords: </td>
+                    <td class="inputfield"><input type="text" name="keywords" class = "field"></td>
+                    <td class="descfield">(Enter Keywords separated by commas)</td>
+                     
+                </tr>
+            </table>
+
             <br><br>
             <button id="sendALLButton" class="btn btn-custom">Get tweets that contain ALL of these terms</button>
             <button id="sendANYButton" class="btn btn-custom">Get tweets that contain ANY of these terms</button>
         </form>
+
+        
     </div>
 
     <hr>
