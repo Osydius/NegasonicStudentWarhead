@@ -91,6 +91,7 @@ function handleServerResponse(data){
     var userObject = {};
     var tweetWordsCount = {};
     var locatedTweetCounter = 0;
+    var locatedTweets = [];
 
     //iterate through all retrieved tweets
     for(i=0; i<data.length; i++){
@@ -182,15 +183,17 @@ function handleServerResponse(data){
         userObject = generateUserStats(userObject, rtAuthorStat, authorStat, tweetWordsStat);
         //Geolocated tweets
         if(data[i].coordinates != null){
-            generateMapMarker(data[i].coordinates, tweetDisplay);
+            locatedTweets.push(data[i]);
             locatedTweetCounter++;
         }
     }
 
     //set the number of located tweets string
     $('#no_located_tweets').html(locatedTweetCounter);
+    //set up the map
     $('#geo_located_display').css("display", "block");
-    initializeMap();
+    initializeMap(locatedTweets);
+    
 
     //display stats div
     $('#tweet_stats_display').css("display", "block");
@@ -432,32 +435,32 @@ function linkifyTweet(tweetData){
 }
 
 // GOOGLE MAPS STUFF ------------------------------------------------------------------------------------------------------------------------------
-//Global variable for the map
-var myLatlng = new google.maps.LatLng(54.504682, -0.436730);
-var mapOptions = {
-    zoom: 6,
-    center: myLatlng}
-var map = new google.maps.Map(document.getElementById("map"), mapOptions);
-
-function initializeMap(){
+function initializeMap(geoTweets){
+    console.log('initializeMap')
     var myLatlng = new google.maps.LatLng(54.504682, -0.436730);
     var mapOptions = {
         zoom: 6,
         center: myLatlng}
     var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+    for(i=0; i<geoTweets.length; i++){
+        generateMapMarker(geoTweets[i], map);
+    }
 }
 
 
-function generateMapMarker(coordinatesObject, tweetDispley){
-    var lat = coordinatesObject.coordinates[1];
-    var long = coordinatesObject.coordinates[0];
+function generateMapMarker(geoTweet, map){
+    console.log('generateMapMarker')
+    var lat = geoTweet.coordinates.coordinates[1];
+    var long = geoTweet.coordinates.coordinates[0];
     var myLatlng = new google.maps.LatLng(lat, long);
+    console.log(myLatlng)
     var marker = new google.maps.Marker({
         position: myLatlng,
         map: map,
         title:"tweet"});
     var infowindow = new google.maps.InfoWindow({
-        content: tweetDispley,
+        content: "hello",
         maxWidth:200 });
     google.maps.event.addListener(marker, 'click', function() {
     infowindow.open(map, marker);});
