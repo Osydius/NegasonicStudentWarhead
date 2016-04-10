@@ -1,6 +1,15 @@
-// SEND DATA TO SERVER-----------------------------------------------------------------------------------------------------------------
+//
+// Authors: James Hall and Nicola Willis
+// Team: NegasonicStudentWarhead
+//
+
+// Section 1: Validate and send data to server-----------------------------------------------------------------------------------------------------------------
+/**
+ * Sends an Ajax call that ANDs all the query terms together
+ * @param {String} url - 
+ * @param {Object} data - the terms that were entered into the form
+ */
 function sendALLAjaxQuery(url, data) {
-    console.log(url)
         $.ajax({
             dataType: 'json',
             contentType: "application/json",
@@ -17,6 +26,11 @@ function sendALLAjaxQuery(url, data) {
         });
     }
 
+/**
+ * Sends an Ajax call that ORs all the query terms together
+ * @param {String} url - 
+ * @param {Object} data - the terms that were entered into the form
+ */
 function sendANYAjaxQuery(url, data) {
     $.ajax({
         dataType: 'json',
@@ -33,6 +47,10 @@ function sendANYAjaxQuery(url, data) {
 });
 }
 
+/**
+ * Iterates through the terms entered in the form and packages them into an object
+ * that contains all of the fields split into separate terms where appropriate.
+ */
 $.fn.serializeObject = function () {
         var o = {};
         var a = this.serializeArray();
@@ -57,6 +75,10 @@ $.fn.serializeObject = function () {
         return o;
     };
 
+    /**
+    * Called when either form button is pressed. Checks to see which button is pressed and then
+    * calls the appropriate method to handle this.
+    */
     function sendData() {
         var form = $('#myForm')
 
@@ -71,7 +93,7 @@ $.fn.serializeObject = function () {
         return false;
     }
 
-
+    //Set the onclick events for the buttons as being the send data function
     var sendALLButton = document.getElementById('sendALLButton');
     sendALLButton.onclick = sendData;
 
@@ -80,14 +102,22 @@ $.fn.serializeObject = function () {
 
 
 
-// HANDLE RESPONSE FROM SERVER ---------------------------------------------------------------------------------------------------
+// Section 2: Handle the response that is sent back from the server to get retrieved tweets and stats ---------------------------------------------------------------------------------------------------
+
+/**
+ * Iterates through all of the tweets that were retrieved. Checks whether the tweet is a 
+ * retweet and appends the appropriate elements to the html page accordingly. During iteration
+ * the appropriate data needed to create the stats displays is collected. After iteration stats
+ * and map displays are created.
+ * @param {Object} data - the tweets that have been retrieved by the server
+ */
 function handleServerResponse(data){
     $('#no_tweets').html(data.length);
 
     //remove any old tweets
     $('.tweettile').remove();
     
-    //objects to collect information whilst parsing for the stats display
+    //objects to collect information for the stats display whilst parsing
     var userObject = {};
     var tweetWordsCount = {};
     var locatedTweetCounter = 0;
@@ -95,6 +125,8 @@ function handleServerResponse(data){
 
     //iterate through all retrieved tweets
     for(i=0; i<data.length; i++){
+        //create all the elements that will be required for this tweet regardless of whether
+        //it is a retweet
         var container = document.createElement("div");
         var innerContainer = document.createElement("div");
         var profileImg = document.createElement("img");
@@ -106,8 +138,6 @@ function handleServerResponse(data){
 
         var dateArray = data[i].created_at.split(' ');
         var formattedDate = dateArray[3].slice(0,-3) + ' ' + dateArray[0] + ' ' + dateArray[2] + ' ' + dateArray[1] + ' ' + dateArray[5];
-
-        //console.log(data[i].coordinates)
         
         //determine whether or not the tweet is a retweet
         if (data[i].retweeted_status != null){
@@ -142,11 +172,13 @@ function handleServerResponse(data){
             $(profileImg).attr('style','float:left;');
             $(innerContainer).attr('style', 'margin-left: 58px;');
 
+            //save the appropriate data for the stats
             var rtAuthorStat = data[i].user;
             var authorStat = retweetData.user;
             var tweetWordsStat = stripToWords(data[i]); //this will be used for both top 20 words and active users
 
         } else {
+            //not a retweet
 
             $('#tweets').append(container);
             container.appendChild(profileImg);
@@ -169,7 +201,7 @@ function handleServerResponse(data){
             $(profileImg).attr('style','float:left;');
             $(innerContainer).attr('style', 'margin-left: 58px;');
 
-            //for stats make a note of the author and words in tweet
+            //save the appropriate data for the stats
             var rtAuthorStat = null;
             var authorStat = data[i].user;
             var tweetWordsStat = stripToWords(data[i]);  //this will be used for both top 20 words and active users
@@ -177,11 +209,11 @@ function handleServerResponse(data){
         }
 
         //Stats
-        //TOP 20 WORDS
+        //Count the word frequencies for the top 20 words
         tweetWordsCount = getTotalWordCounts(tweetWordsCount, getWordsCounts(tweetWordsStat));
-        //10 ACTIVE USERS
+        //Calculate user stats for the top 10 users
         userObject = generateUserStats(userObject, rtAuthorStat, authorStat, tweetWordsStat);
-        //Geolocated tweets
+        //If the tweet was geolocated, save it to a geolocated tweet list
         if(data[i].coordinates != null){
             locatedTweets.push(data[i]);
             locatedTweetCounter++;
@@ -208,67 +240,93 @@ function handleServerResponse(data){
     $('#tweets_display').css("display", "block");
 }
 
+/**
+ * Called for each retrieved tweet. Takes a userObject and information about the rt author/author as well as 
+ * the words used in the tweet. Checks to see if this author has written a tweet before and if so incremements 
+ * the count for the number of tweets by that author and merges the word counts for the new tweet with the existing word
+ * counts for that auther. Else creates a new entry in the userObject for the new author.
+ * @param {Object} userObject - holds for each user, their name, the number of tweets that they have written, and words they 
+ *                              have written with their counts
+ * @param {Object} rtAuthorStat - holds all the information about the retweeter - null if it wasn't retweeted
+ * @param {Object} authorStat - holds all the information about the original author
+ * @param {Array} tweetWordsStat - an array of all the words used in the tweet stripped of punctuation etc.
+ * @return {Object} userObject - an updated objection that holds each user, the number of tweets they have written, and
+ *                               the number of times they have written each word
+ */
 function generateUserStats(userObject, rtAuthorStat, authorStat, tweetWordsStat){
-    //if they exist add the rtAuthor to the user object
-        if(rtAuthorStat != null){
-            //check to see if this author has already been listed in the object
-            if(!userObject.hasOwnProperty(rtAuthorStat.screen_name)) {
-                //if not create a new entry for that user
-                var profileImageUrl = rtAuthorStat.profile_image_url_https;
-                var name = String(rtAuthorStat.screen_name);
-                userObject[name] = {tweetCount: 1, profileImage: profileImageUrl, words:{}};
-            } else {
-                //else add to the existing user
-                var name = String(rtAuthorStat.screen_name);
-                var newCount = userObject[name].tweetCount + 1;
-                userObject[name].tweetCount = newCount;
-            }
+    //if a tweet is retweeted, add the retweeter to the user object but not the words
+    //in the tweet as these were written by the original author. It was decided this 
+    //behaviour would be best because a retweeter is an 'active' user.
 
-        }
-        
-        //add the original author to the user object
-        //add as the value of the original author the word count list for that author
-        //add the word count for that tweet to a separate word count object
-        if(!userObject.hasOwnProperty(authorStat.screen_name)){
-            var profileImageUrl = authorStat.profile_image_url_https;
-            var name = String(authorStat.screen_name);
-            var counts = getWordsCounts(tweetWordsStat);
-            userObject[name] = {tweetCount: 1, profileImage: profileImageUrl, words: counts};
+    //if they exist add the rtAuthor to the user object
+    if(rtAuthorStat != null){
+        //check to see if this author has already been listed in the object
+        if(!userObject.hasOwnProperty(rtAuthorStat.screen_name)) {
+            //if not create a new entry for that user
+            var profileImageUrl = rtAuthorStat.profile_image_url_https;
+            var name = String(rtAuthorStat.screen_name);
+            userObject[name] = {tweetCount: 1, profileImage: profileImageUrl, words:{}};
         } else {
-            //increment the tweet count for that author
-            var name = String(authorStat.screen_name);
+            //else add to the existing user
+            var name = String(rtAuthorStat.screen_name);
             var newCount = userObject[name].tweetCount + 1;
             userObject[name].tweetCount = newCount;
-
-            //combine counts for this tweet with existing accounts
-            var fullCount = getTotalWordCounts(userObject[name].words, getWordsCounts(tweetWordsStat));
-            userObject[name].words = fullCount;
         }
+    }
+    
+    //add the original author to the user object
+    //add as the value of the original author the word count list for that author
+    //add the word count for that tweet to a separate word count object
+    if(!userObject.hasOwnProperty(authorStat.screen_name)){
+        var profileImageUrl = authorStat.profile_image_url_https;
+        var name = String(authorStat.screen_name);
+        var counts = getWordsCounts(tweetWordsStat);
+        userObject[name] = {tweetCount: 1, profileImage: profileImageUrl, words: counts};
+    } else {
+        //increment the tweet count for that author
+        var name = String(authorStat.screen_name);
+        var newCount = userObject[name].tweetCount + 1;
+        userObject[name].tweetCount = newCount;
+
+        //combine counts for this tweet with existing accounts
+        var fullCount = getTotalWordCounts(userObject[name].words, getWordsCounts(tweetWordsStat));
+        userObject[name].words = fullCount;
+    }
 
     return userObject;
 }
 
-
-//takes an array of words and returns an object of each word along
-//with its count
+/**
+ * Takes an array of words and returns an object containing each word with a count of the number of times it appeared
+ * in the array.
+ * @param {Array} tweetWords - an array that contains words - there may be repititions
+ * @return {Object} tweetWordsCount - each word from tweetWords is listed once, alongside the number of times it 
+ *                                    appeared in the original array
+ */
 function getWordsCounts(tweetWords){
     tweetWordsCount = {};
     tweetWords = tweetWords.filter(Boolean); //remove "" from array
 
-        //put each word into an array with its count
-        for(j=0; j<tweetWords.length; j++){
-            //if word doesn't exist in array then add it with its count
-            if(tweetWordsCount.hasOwnProperty(tweetWords[j])){
-                var word = tweetWords[j];
-                tweetWordsCount[word]++;
-            } else {
-                tweetWordsCount[tweetWords[j]] = 1;
-            }
+    //put each word into an array with its count
+    for(j=0; j<tweetWords.length; j++){
+        //if word doesn't exist in array then add it with its count
+        if(tweetWordsCount.hasOwnProperty(tweetWords[j])){
+            var word = tweetWords[j];
+            tweetWordsCount[word]++;
+        } else {
+            tweetWordsCount[tweetWords[j]] = 1;
         }
+    }
     return tweetWordsCount;
 }
 
-//takes an existing word count object and a new one and merges them together
+/**
+* Takes an two objects that match words with their counts and merges them together.
+* @param {Object} existingCounts - words associated with counts
+* @param {Object} newCounts - words associated with counts
+* @return {Object} existingCounts - the existingCounts object with all of the words and counts added from the 
+*                                   new counts object
+*/
 function getTotalWordCounts(existingCounts, newCounts){
     for(var key in newCounts){
         if(existingCounts.hasOwnProperty(key)){
@@ -281,11 +339,18 @@ function getTotalWordCounts(existingCounts, newCounts){
     return existingCounts;
 }
 
-//takes an object of all the words and their counts and displays the top 20 words
-//on the stats display
+/**
+* Takes an object of all the words and their counts and displays the top 20 words
+* on the stats display of the page.
+* @param {Object} tweetWordsCount - contains each word used in the retrieved tweeets along with 
+*                                   a count of the times that it appeared
+*/
 function displayTopWords(tweetWordsCount){
+    //sort the object in order of highest count first and take the top 20 values
     var top20Array = Object.keys(tweetWordsCount).sort(function(a,b){return tweetWordsCount[b]-tweetWordsCount[a]}).slice(0,20);
     $('.top20wordsdisplay').remove();
+
+    //for each element in the top 20 words display this on the page
     for(i=0; i<top20Array.length; i++){
         var container = document.createElement("div")
         
@@ -298,16 +363,22 @@ function displayTopWords(tweetWordsCount){
         }
 
         var wordText = top20Array[i] + ": " + tweetWordsCount[top20Array[i]];
-        $(container).text(wordText);
-        
+        $(container).text(wordText);    
     }
 }
 
-//takes a user object and iterates through this to display the 10 most active users
-//along with their profile picutres, and frequent words on the stats display
+/**
+* Takes an object which details each user along with the number of tweets they have written and the words they have used
+* and displays the 10 most active users along with their profile pictures, and most frequent words on the stats display.
+* @param {Object} userObject - holds for each user, their name and profile picture url, the number of tweets they have
+*                              written/retweeted and the words they have used
+*/
 function displayActiveUsers(userObject){
+    //sort the object in order of the most tweets first and take the top 10
     var top10Array = Object.keys(userObject).sort(function(a,b){return userObject[b].tweetCount-userObject[a].tweetCount}).slice(0,10);
     $('.usertile').remove();
+
+    //for each element in the top 10 array display it on the stats page
     for(i=0; i<top10Array.length; i++){
         var container = document.createElement("div");
         var profileImg = document.createElement("img");
@@ -335,7 +406,7 @@ function displayActiveUsers(userObject){
         
         $(noTweets).text(' - ' + userObject[userName].tweetCount + ' tweets - most frequent words: ');
 
-        //if it is 1st, 2nd or 3rd add special class
+        //if it is 1st, 2nd or 3rd add special class for gold/silver/bronze
         if(i==0||i==1||i==2){
             $(container).attr('class', 'place'+i + ' usertile');
         }
@@ -351,8 +422,12 @@ function displayActiveUsers(userObject){
     }
 }
 
-//Removes all hashtags, urls, media links, mentions, punctuation
-//and different cases from a tweet and returns this stripped version
+/**
+* Used to get the raw words in a tweet. Removes all hashtags, urls, media links, mentions, 
+* punctuation and different cases from a tweet returning the stripped version.
+* @param {Object} tweetData - all of the information about a tweet
+* @return {Array} - an array containing only the words from the tweetData
+*/
 function stripToWords(tweetData){
     //remove hashes
     var hashtagArray = tweetData.entities.hashtags;
@@ -382,8 +457,13 @@ function stripToWords(tweetData){
     return strippedTweet.split(" ");
 }
 
-//Gets tweet text and for each hash, mention, url or media makes the link work or in the case of media
-//gets the media to display
+/**
+* Given the information about a tweet, makes sure that each hash, mention, url or media displays or has an
+* active link.
+* @param {Object} tweetData - all of the information about a tweet
+* @return {String} tweetText - a string that contains the appropriate html elements to display
+*                              links and media correctly
+*/
 function linkifyTweet(tweetData){
     var tweetText = tweetData.text;
 
@@ -434,9 +514,14 @@ function linkifyTweet(tweetData){
     return tweetText;
 }
 
-// GOOGLE MAPS STUFF ------------------------------------------------------------------------------------------------------------------------------
+// Section 3: If any exist, draw geolocated tweets on a google map ------------------------------------------------------------------------------------------------------------------------------
+
+/**
+* Creates a google map centered on the UK and places it on the screen. Iterates through all geo located
+* tweets for display.
+* @param {Object} geoTweets - An object containing all geoTweets
+*/
 function initializeMap(geoTweets){
-    console.log('initializeMap')
     var myLatlng = new google.maps.LatLng(54.504682, -0.436730);
     var mapOptions = {
         zoom: 6,
@@ -448,73 +533,46 @@ function initializeMap(geoTweets){
     }
 }
 
-
+/**
+* Takes each tweet with geolocation and the map and places markers at the appropriate places on the map.
+* @param {Object} geoTweet - A tweet object
+* @param {Var} map - the google map on the screen
+*/
 function generateMapMarker(geoTweet, map){
-    console.log('generateMapMarker')
     var lat = geoTweet.coordinates.coordinates[1];
     var long = geoTweet.coordinates.coordinates[0];
     var myLatlng = new google.maps.LatLng(lat, long);
-    console.log(myLatlng)
     var marker = new google.maps.Marker({
         position: myLatlng,
         map: map,
         title:"tweet"});
     var infowindow = new google.maps.InfoWindow({
-        content: "hello",
+        content: geoTweet.text,
         maxWidth:200 });
     google.maps.event.addListener(marker, 'click', function() {
     infowindow.open(map, marker);});
 }
 
-// AUTOCOMPLETE JQUERY PLUGIN -----------------------------------------------------------------------------------------------------
-
-//autocomplete the team
-/**
-$(document).ready(function() {
-    $.ajax({
-            type: 'GET',
-            url: 'http://localhost:3000/getClubs.html',
-            success: function (data) {
-                var clubs =[]
-                for(i=0; i<data.length; i++){
-                    clubs.push(data[i].name);
-                }
-                $( "#team" ).autocomplete({
-               source: clubs
-            });
-            },
-            error: function (xhr, status, error) {
-                console.log('Error: ' + error.message);
-               
-            }
-    });
-});
-*/
+// Section 4: JQuery Autocomplete plugin -----------------------------------------------------------------------------------------------------
 
 /**
-//autocomplete the players
+* Listens to the team input field and generates autocomplete suggestions as the user types.
+*/
 $(document).ready(function() {
     $.ajax({
-            type: 'GET',
-            url: 'http://localhost:3000/getPlayers.html',
-            success: function (data) {
-                var players =[]
-                for(i=0; i<data.length; i++){
-                    players.push(data[i].name);
-                }
-                $( "#players" ).autocomplete({
-               source: players
-            });
-            },
-            error: function (xhr, status, error) {
-                console.log('Error: ' + error.message);
-               
+        type: 'GET',
+        url: 'http://localhost:3000/getClubs.html',
+        success: function (data) {
+            var clubs =[]
+            for(i=0; i<data.length; i++){
+                clubs.push(data[i].name);
             }
+            $( "#team" ).autocomplete({
+           source: clubs
+        });
+        },
+        error: function (xhr, status, error) {
+            console.log('Error: ' + error.message);
+        }
     });
 });
-
-*/
-
-
-
-

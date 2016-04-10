@@ -1,3 +1,5 @@
+/* JQuery Autocomplete plugin file - not written by James Hall and Nicola Willis
+* Credit goes to http://jqueryui.com/autocomplete/
 /*! jQuery UI - v1.11.4 - 2016-03-24
 * http://jqueryui.com
 * Includes: core.js, widget.js, mouse.js, position.js, autocomplete.js, menu.js

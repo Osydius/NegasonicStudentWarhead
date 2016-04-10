@@ -1,4 +1,11 @@
-/* CSS for default elements */
+/*
+*
+* Authors: James Hall and Nicola Willis
+* Team: NegasonicStudentWarhead
+*
+*/
+
+/* Style for basic elements */
 h1 {
   margin-top: 0px;
   color:white;
@@ -45,7 +52,7 @@ img{
   margin:0px;
 }
 
-/* Gold, Silver, Bronze place styles */
+/* Gold, Silver, Bronze place styles, used in statistics displays */
 .place0{
   color: #BAB407;
   font-size: 120%;
@@ -74,7 +81,7 @@ img{
   color: white;
 }
 
-/* Top 10 Users*/
+/* Styles for Top 10 Users */
 #top_users_container{
   color:white;
   background-color: #333333;
@@ -108,6 +115,7 @@ img{
     float: left;
 }
 
+/* Set the dimensions for the google map */
 #map {
   width: 85%;
   height: 600px;
@@ -158,23 +166,27 @@ img{
   text-align: left;
 }
 
-
-
 .borderless td, .borderless th {
     border: none;
 }
 
-/* Smooth outline with box-shadow: */
+/* Give the form boxes an orange outline to match the form button style */
 input[type=text] {
     box-shadow: 0 0 0 2pt #ff9933;
     font-family: 'Oswald', sans-serif;
 }
 
-/* Hard "outline" with box-shadow: */
 input[type=text]:focus {
     box-shadow: 0 0 0 2pt #ff9933;
 }
 
+textarea:focus, input:focus, input[type]:focus, .uneditable-input:focus {   
+    border-color: #ff9933;
+    box-shadow: 0 0 0 2pt #ff9933;
+    outline: #ff9933 thick;
+}
+
+/* Style for the form buttons generated using http://charliepark.org/bootstrap_buttons/ */
 .btn-custom {
   font-family: 'Oswald', sans-serif;
   background-color: hsl(30, 100%, 60%) !important;
@@ -193,10 +205,6 @@ input[type=text]:focus {
   -webkit-font-smoothing: antialiased;
 }
 
-textarea:focus, input:focus, input[type]:focus, .uneditable-input:focus {   
-    border-color: #ff9933;
-     box-shadow: 0 0 0 2pt #ff9933;
-    outline: #ff9933 thick;
-}
+
 
 

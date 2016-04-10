@@ -1,3 +1,10 @@
+<!--
+*
+* Authors: James Hall and Nicola Willis
+* Team: NegasonicStudentWarhead
+*
+-->
+
 <!DOCTYPE html>
 <html>
 <head lang="en">
@@ -7,10 +14,11 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <link href="../bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
     <link rel="stylesheet" type="text/css" href="css/queryInterface.css">
+    <!-- The three stylesheets below are for the JQuery autocomplete plugin, reference detailed in documentation -->
     <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
     <link rel="stylesheet" type="text/css" href="css/jquery-ui.structure.css">
     <link rel="stylesheet" type="text/css" href="css/jquery-ui.theme.css">
-    <!-- for the font -->
+    <!-- Google Oswald font, reference detailed in documentation -->
     <link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
 </head>
 
@@ -23,6 +31,7 @@
         <b>Track your favourite team and find out what is happening in the world of football using social media</b>
     </div>
 
+    <!--A form to take 4 imputs from the user to create a query-->
     <div id="track_discussions_form">
         <h3>Find out what's happening</h3>
         <br>
@@ -64,6 +73,7 @@
 
     <hr>
 
+    <!-- Display the statistics calculated for the tweets -->
     <div id="tweet_stats_display" class="display_tile">
         <h3>Tweet Stats</h3>
 
@@ -72,12 +82,14 @@
         <table class="table borderless" style="width:50%;">
             <tbody>
                 <tr>
+                    <!--Display the top 20 words-->
                     <td style="width:10%;">
                         <div id="top_words">
                             <h4>Top 20 Words</h4>
                         </div>
                     </td>
                 
+                    <!--Display the top 10 users along with the words they most frequently use-->
                     <td style="width:40%;">
                         <!--Surround this display in a container so only the inner contents scroll-->
                         <div id = "top_users_container">
@@ -92,6 +104,7 @@
 
     </div>
 
+    <!--Display all of the tweets that were retrieved-->
     <div id="tweets_display" class= "display_tile">
         <h3>Retrieved tweets</h3>
         <p>We found <p id="no_tweets"></p> tweets for you</p><br><br>
@@ -111,9 +124,11 @@
         <div id="map"></div>
     </div>
 
-<script src="js/queryInterface.js"></script>
-<script src="js/jquery-ui.js"></script>
-<script src="../bootstrap/js/bootstrap.min.js"></script>
+
+    <script src="js/queryInterface.js"></script>
+    <!--Javascript for the JQuery Autocomplete plugin, reference detailed in the documentatoin-->
+    <script src="js/jquery-ui.js"></script>
+    <script src="../bootstrap/js/bootstrap.min.js"></script>
 
 </body>
 </html>
