@@ -275,9 +275,25 @@ function findClubTwitterHandle(data, response){
 }
 
 function findPlayersTwitterHandle(data, response){
-	for(var i=0;i<data.length;i++){
-		mySqlConnection.query("SELECT * FROM footballplayers")
-	}
+	var totalSearches = data.length;
+	var currentPlayerSearch = 0;
+	var currentResults = [];
+	findPlayerTwitterHandle(data, totalSearches, currentPlayerSearch, currentResults, response);
+}
+
+function findPlayerTwitterHandle(playerNames, totalSearches, currentPlayerSearch, currentResults, response){
+	mySqlConnection.query("SELECT * FROM footballplayers WHERE footballPlayerName = ?", [playerNames[currentPlayerSearch]], function(error, result){
+		if(result.length > 0){
+			currentResults.concat(result);
+		}
+		if(currentPlayerSearch < totalSearches){
+			currentPlayerSearch++;
+		} else {
+			currentResults = JSON.stringify(currentResults);
+			response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+			response.end(currentResults);
+		}
+	});
 }
 
 function insertNewTweets(allTweets){
