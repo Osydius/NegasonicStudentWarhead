@@ -160,9 +160,6 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets){
 			} else if(data.statuses != undefined){
 				if(data.statuses.length > 0){
 					// add tweets to database
-					data.statuses.forEach(function(tweet){
-						insertNewTweets(tweet);
-					})
 
 					// build return tweets
 					returnedTweets = data.statuses;
@@ -170,9 +167,10 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets){
 					if(returnedTweets != undefined && returnedTweets.length < totalTweets && data.statuses.length == maxRetrievableTweets){
 						queryTwitter(query, response, totalTweets, maxId, returnedTweets);
 					} else {
+						insertNewTweets(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-		    		response.end(returnedTweets);
+		    			response.end(returnedTweets);
 					}
 				} else {
 					console.log("no statuses found");
@@ -190,9 +188,10 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets){
 					if(returnedTweets != undefined && returnedTweets.length < totalTweets && data.statuses.length == maxRetrievableTweets){
 						queryTwitter(query, response, totalTweets, maxId, returnedTweets);
 					} else {
+						insertNewTweets(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-		    		response.end(returnedTweets);
+		    			response.end(returnedTweets);
 					}
 				} else {
 					console.log("no statuses found");
@@ -260,31 +259,36 @@ function getFootballClubs(response){
 }
 
 function insertNewTweets(tweetInfo){
-	var newInfo = tweetInfo;
+	if(tweetInfo.length > 0){
+		for(i=0;i<tweetInfo.length;i++){
+			newTwitterUser(tweetInfo[i].user);
+			var tweetInfo = {};
+			var tweetUsers = {};
+			var tweetHashtags = {};
+			var tweetUrls = {};
+			var tweetMedia = {};
+		}
+	}
 
-	var query = "";
-
-	// check user doesn't already exist
-	twitterUserTwitterID = tweetInfo.user.id
-	query = "IF NOT EXISTS(SELECT * FROM twitterusers WHERE twitterUserTwitterID = " + twitterUserTwitterID + ")";
-	query = query + " BEGIN";
-
-	// if user doesn't exist, insert into database
-	twitterUserName = tweetInfo.user.name;
-	twitterUserScreenName = tweetInfo.user.screen_name;
-	query = query + " INSERT INTO twitterusers (twitterUserName, twitterUserScreenName, twitterUserTwitterID) VALUES (" + twitterUserName + ", " + twitterUserScreenName + ", " + twitterUserTwitterID + ")";
-	query = query + " END"
-
-	//check user is in the database
-	query = query + " IF EXISTS(SELECT * FROM twitterusers WHERE twitterUserTwitterID = " + twitterUserTwitterID + ")";
-	query = query + " BEGIN"
-
-	query = query + " END"
-
-	// mySqlConnection.query(/* query */, function(error, result){
+	
+	// console.log(query);
+	// mySqlConnection.query(query, function(error, result){
 	// 	console.log(result);
-	// })
+	// });
 }
+
+function newTwitterUser(userInfo){
+	var newUserInfo = {twitterUserName: userInfo.name, twitterUserScreenName: userInfo.screen_name, twitterUserTwitterId: userInfo.id};
+
+	mySqlConnection.query("SELECT * FROM twitterusers WHERE twitterUserTwitterId = ?", [userInfo.id], function(error, result){
+		if(result.length == 0){
+			mySqlConnection.query("INSERT INTO twitterusers SET ?", newUserInfo, function(error, result){
+				console.log(result);
+			})
+		}	
+	});
+}
+
 
 function gracefulShutdown(){
 	console.log("Received kill signal, shutting down gracefully.");
