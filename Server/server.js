@@ -24,6 +24,8 @@ mySqlConnection.connect();
 var fileServer = new (static.Server)();
 var portNo = config.portNo;
 
+var totalTweetsWanted = 300;
+
 var app = express();
 app.use(bodyParser.json());
 app.use(cors());
@@ -50,7 +52,8 @@ app.get('/getClubs.html', function (request, response) {
 
 /********** POST METHODS **********/
 app.post('/getAllTweets.html', function(request, response){
-	getAllTweets(request.body, response);
+	//getAllTweets(request.body, response);
+	getAllDatabaseTweets(request.body, response);
 });
 
 app.post('/getAnyTweets.html', function(request, response){
@@ -65,7 +68,7 @@ app.post('/findPlayersTwitterHandle.html', function(request, response){
 	findPlayersTwitterHandle(request.body, response);
 });
 
-function getAllTweets(clientData, response){
+function getAllTweets(clientData, response, currentResults){
 	var twitterQuery = '';
 	var queryTeam = clientData.team;
 	var queryPlayers = clientData.players;
@@ -101,7 +104,7 @@ function getAllTweets(clientData, response){
 	}
 
 	// query, response, totalTweets, lastId, currentTweets
-	queryTwitter(twitterQuery, response, 300, 0, null);
+	queryTwitter(twitterQuery, response, totalTweetsWanted - currentResults.length, 0, currentResults);
 }
 
 function getAnyTweets(clientData, response){
@@ -111,16 +114,16 @@ function getAnyTweets(clientData, response){
 	var queryHashtags = clientData.hashtags;
 	var queryKeywords = clientData.keywords;
 
-	twitterQuery = twitterQuery + ' from:' + queryTeam;
+	twitterQuery = twitterQuery + ' from:' + encodeURIComponent(queryTeam);
 
 	if(queryPlayers !== undefined){
 		queryPlayersCount = queryPlayers.length;
 		for(i = 0; i < queryPlayersCount; i++){
 			if(queryPlayers[i] != ""){
 				if(twitterQuery == ""){
-					twitterQuery = twitterQuery + ' from:' + queryPlayers[i];
+					twitterQuery = twitterQuery + ' from:' + encodeURIComponent(queryPlayers[i]);
 				} else {
-					twitterQuery = twitterQuery + ' OR from:' + queryPlayers[i];
+					twitterQuery = twitterQuery + ' OR from:' + encodeURIComponent(queryPlayers[i]);
 				}
 				
 			}
@@ -131,9 +134,9 @@ function getAnyTweets(clientData, response){
 		for(i = 0; i < queryHashtagsCount; i++){
 			if(queryHashtags[i] != ""){
 				if(twitterQuery == ""){
-					twitterQuery = twitterQuery + ' from:' + queryHashtags[i];
+					twitterQuery = twitterQuery + ' from:' + encodeURIComponent(queryHashtags[i]);
 				} else {
-					twitterQuery = twitterQuery + ' OR from:' + queryHashtags[i];
+					twitterQuery = twitterQuery + ' OR from:' + encodeURIComponent(queryHashtags[i]);
 				}
 			}
 		}
@@ -143,14 +146,14 @@ function getAnyTweets(clientData, response){
 		for(i = 0; i < queryKeywordsCount; i++){
 			if(queryKeywords[i] != ""){
 				if(twitterQuery == ""){
-					twitterQuery = twitterQuery + ' from:' + queryKeywords[i];
+					twitterQuery = twitterQuery + ' from:' + encodeURIComponent(queryKeywords[i]);
 				} else {
-					twitterQuery = twitterQuery + ' OR from:' + queryKeywords[i];
+					twitterQuery = twitterQuery + ' OR from:' + encodeURIComponent(queryKeywords[i]);
 				}
 			}
 		}
 	}
-	queryTwitter(twitterQuery, response);
+	queryTwitter(twitterQuery, response, 300, 0, null);
 }
 
 function queryTwitter(query, response, totalTweets, lastId, returnedTweets){
@@ -272,7 +275,6 @@ function findPlayersTwitterHandle(data, response){
 	var totalSearches = data.length;
 	var currentPlayerSearch = 0;
 	var currentResults = [];
-	console.log("Looking for " + totalSearches + " players.");
 	if(data.length > 0){
 		findPlayerTwitterHandle(data, totalSearches, currentPlayerSearch, currentResults, response);
 	} else {
@@ -283,18 +285,14 @@ function findPlayersTwitterHandle(data, response){
 }
 
 function findPlayerTwitterHandle(playerNames, totalSearches, currentPlayerSearch, currentResults, response){
-	console.log("Search number: " + currentPlayerSearch);
 	mySqlConnection.query("SELECT * FROM footballplayers WHERE footballPlayerName = ?", [playerNames[currentPlayerSearch]], function(error, result){
 		if(result.length > 0){
-			console.log(result);
 			currentResults.push(result);
-			console.log(currentResults);
 		}
 		if(currentPlayerSearch < totalSearches - 1){
 			currentPlayerSearch++;
 			findPlayerTwitterHandle(playerNames, totalSearches, currentPlayerSearch, currentResults, response);
 		} else {
-			console.log(currentResults);
 			currentResults = JSON.stringify(currentResults);
 			response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 			response.end(currentResults);
@@ -389,7 +387,6 @@ function newUserMention(tweetInfo, tweetId){
 				newUserInfo = {twitterUserName: currentUserMention.name, twitterUserScreenName: currentUserMention.screen_name, twitterUserTwitterId: currentUserMention.id_str}
 				mySqlConnection.query("INSERT INTO twitterusers SET ?", newUserInfo, function(error, result){
 					if(error != null){
-						console.log(currentUserMention.id)
 						console.log(error)
 					}
 					userMentionUserId = result.insertId;
@@ -469,6 +466,101 @@ function newTweetTwitterUrl(tweetId, urlId, startPoint, endPoint){
 	});
 }
 
+function getAllDatabaseTweets(queryData, response){
+	var currentResults = [];
+	mySqlConnection.query('SELECT * FROM twitterusers WHERE twitterUserScreenName = ?', [queryData.team], function(error, result){
+		if(result.length != 0){
+			var userIdList = [];
+			var userInfo = {};
+			userInfo.name = result[0].twitterUserName;
+			userInfo.screen_name = result[0].twitterUserScreenName;
+			for(var i=0;i<result.length;i++){
+				userIdList.push(result[i].twitterUserId);
+
+				var newUser = {};
+			}
+			getDatabaseQueryTweets(queryData, response, userIdList, 0, [], userInfo, 'all')
+		}
+	});
+}
+
+function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch, currentResults, userInfo, queryType){
+	mySqlConnection.query('SELECT * FROM tweets WHERE twitterUserId = ?', [tweetUserIds[currentSearch]], function(error, result){
+		if(result.length != 0){
+			for(var i=0;i<result.length;i++){
+				currentResults.push(result[i]);
+			}
+		}
+
+		if(currentSearch != tweetUserIds.length - 1){
+			currentSearch++;
+			getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch++, currentResults, userInfo, queryType);
+		} else {
+			if(queryData.players.length != 0){
+				//ADD IN GET TWEETS FROM PLAYERS
+				// getMoreQueryTweets(queryData, response, queryData.players, 0, currentResults);
+				var tempReturnResults = [];
+				for(var i=0; i<currentResults.length; i++){
+					var currentTweet = currentResults[i];
+					var sendBack = true;
+
+					for(var j=0; j<queryData.hashtags; j++){
+						if(currentTweet.tweetText.indexOf('#' + queryData.hashtags[j]) == -1){
+							sendBack = false;
+						}
+					}
+
+					for(var j=0; j<queryData.keywords; j++){
+						if(currentTweet.tweetText.indexOf(queryData.keywords[j]) == -1){
+							sendBack = false;
+						}
+					}
+
+					if(sendBack == true){
+						tempReturnResults.push(currentTweet);
+					}
+				}
+
+				var returnResults = [];
+				for(var i=0; i<tempReturnResults.length;i++){
+					var newReturnTweet = {};
+					newReturnTweet.id = tempReturnResults[i].tweetId;
+					newReturnTweet.text = tempReturnResults[i].tweetText;
+
+					var newTweetDate = new Date(tempReturnResults[i].tweetCreatedAt)
+					newReturnTweet.created_at = newTweetDate.toString();
+					newReturnTweet.user = userInfo;
+
+					var newTweetEntities = {};
+					newTweetEntities.hashtags = [];
+					newTweetEntities.user_mentions = [];
+					newTweetEntities.urls = [];
+					newTweetEntities.media = [];
+					newReturnTweet.entities = newTweetEntities;
+
+					returnResults.push(newReturnTweet);
+				}
+
+				if(returnResults.length < totalTweetsWanted){
+					if(queryType == 'all'){
+						getAllTweets(queryData, response, returnResults);
+					} else if(queryType == 'any'){
+
+					} else {
+						returnResults = JSON.stringify(returnResults);
+						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+						response.end(returnResults);
+					}
+				}
+			}
+		}
+	});
+}
+
+function getMoreDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch, currentResults){
+
+}
+
 
 function gracefulShutdown(){
 	console.log("Received kill signal, shutting down gracefully.");
@@ -482,5 +574,5 @@ function gracefulShutdown(){
 	setTimeout(function() {
 	   console.error("Could not close connections in time, forcefully shutting down");
 	   process.exit()
-	}, 5*1000);
+	}, 1*1000);
 }
