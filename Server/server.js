@@ -105,58 +105,52 @@ function getAllTweets(clientData, response){
 }
 
 function getAnyTweets(clientData, response){
-	// var twitterQuery = '';
-	// var queryTeam = clientData.team;
-	// var queryPlayers = clientData.players;
-	// var queryHashtags = clientData.hashtags;
-	// var queryKeywords = clientData.keywords;
+	var twitterQuery = '';
+	var queryTeam = clientData.team;
+	var queryPlayers = clientData.players;
+	var queryHashtags = clientData.hashtags;
+	var queryKeywords = clientData.keywords;
 
-	// twitterQuery = twitterQuery + ' from:' + queryTeam;
+	twitterQuery = twitterQuery + ' from:' + queryTeam;
 
-	// if(queryPlayers !== undefined){
-	// 	queryPlayersCount = queryPlayers.length;
-	// 	for(i = 0; i < queryPlayersCount; i++){
-	// 		if(queryPlayers[i] != ""){
-	// 			if(twitterQuery == ""){
-	// 				twitterQuery = twitterQuery + ' from:' + queryPlayers[i];
-	// 			} else {
-	// 				twitterQuery = twitterQuery + ' OR from:' + queryPlayers[i];
-	// 			}
+	if(queryPlayers !== undefined){
+		queryPlayersCount = queryPlayers.length;
+		for(i = 0; i < queryPlayersCount; i++){
+			if(queryPlayers[i] != ""){
+				if(twitterQuery == ""){
+					twitterQuery = twitterQuery + ' from:' + queryPlayers[i];
+				} else {
+					twitterQuery = twitterQuery + ' OR from:' + queryPlayers[i];
+				}
 				
-	// 		}
-	// 	}
-	// }
-	// if(queryHashtags !== undefined){
-	// 	queryHashtagsCount = queryHashtags.length;
-	// 	for(i = 0; i < queryHashtagsCount; i++){
-	// 		if(queryHashtags[i] != ""){
-	// 			if(twitterQuery == ""){
-	// 				twitterQuery = twitterQuery + ' from:' + queryHashtags[i];
-	// 			} else {
-	// 				twitterQuery = twitterQuery + ' OR from:' + queryHashtags[i];
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// if(queryKeywords !== undefined){
-	// 	queryKeywordsCount = queryKeywords.length;
-	// 	for(i = 0; i < queryKeywordsCount; i++){
-	// 		if(queryKeywords[i] != ""){
-	// 			if(twitterQuery == ""){
-	// 				twitterQuery = twitterQuery + ' from:' + queryKeywords[i];
-	// 			} else {
-	// 				twitterQuery = twitterQuery + ' OR from:' + queryKeywords[i];
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// queryTwitter(twitterQuery, response);
-	twitterClient.get('search/tweets', {q: 'drone', geocode:'51.5072,0.1275,200mi', count: 100 }, function(err, data, result) {
-	    tweets = JSON.stringify(data.statuses);
-
-	    response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-	    response.end(tweets);
-  });	
+			}
+		}
+	}
+	if(queryHashtags !== undefined){
+		queryHashtagsCount = queryHashtags.length;
+		for(i = 0; i < queryHashtagsCount; i++){
+			if(queryHashtags[i] != ""){
+				if(twitterQuery == ""){
+					twitterQuery = twitterQuery + ' from:' + queryHashtags[i];
+				} else {
+					twitterQuery = twitterQuery + ' OR from:' + queryHashtags[i];
+				}
+			}
+		}
+	}
+	if(queryKeywords !== undefined){
+		queryKeywordsCount = queryKeywords.length;
+		for(i = 0; i < queryKeywordsCount; i++){
+			if(queryKeywords[i] != ""){
+				if(twitterQuery == ""){
+					twitterQuery = twitterQuery + ' from:' + queryKeywords[i];
+				} else {
+					twitterQuery = twitterQuery + ' OR from:' + queryKeywords[i];
+				}
+			}
+		}
+	}
+	queryTwitter(twitterQuery, response);
 }
 
 function queryTwitter(query, response, totalTweets, lastId, returnedTweets){
@@ -278,7 +272,13 @@ function findPlayersTwitterHandle(data, response){
 	var totalSearches = data.length;
 	var currentPlayerSearch = 0;
 	var currentResults = [];
-	findPlayerTwitterHandle(data, totalSearches, currentPlayerSearch, currentResults, response);
+	if(data.length > 0){
+		findPlayerTwitterHandle(data, totalSearches, currentPlayerSearch, currentResults, response);
+	} else {
+		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+		response.end("Nothing to validate");
+	}
+	
 }
 
 function findPlayerTwitterHandle(playerNames, totalSearches, currentPlayerSearch, currentResults, response){
@@ -306,22 +306,23 @@ function insertNewTweets(allTweets){
 
 function newTwitterUser(tweetInfo){
 	var userInfo = tweetInfo.user;
-	var newUserInfo = {twitterUserName: userInfo.name, twitterUserScreenName: userInfo.screen_name, twitterUserTwitterId: userInfo.id};
+	var newUserInfo = {twitterUserName: userInfo.name, twitterUserScreenName: userInfo.screen_name, twitterUserTwitterId: userInfo.id_str};
 
-	mySqlConnection.query("SELECT * FROM twitterusers WHERE twitterUserTwitterId = ?", [userInfo.id], function(error, result){
+	mySqlConnection.query("SELECT * FROM twitterusers WHERE twitterUserTwitterId = ?", [userInfo.id_str], function(error, result){
 		if(error != null){
 			console.log(error)
 		}
+		console.log(result);
 		if(result.length == 0){
 			mySqlConnection.query("INSERT INTO twitterusers SET ?", newUserInfo, function(error, result){
 				if(error != null){
 					console.log(error)
 				}
 				tweetUserId = result.insertId;
-				newTweet(tweetInfo, tweetUserId);
+				//newTweet(tweetInfo, tweetUserId);
 			});
 		} else {
-			newTweet(tweetInfo, result[0].twitterUserId);
+			//newTweet(tweetInfo, result[0].twitterUserId);
 		}	
 	});
 }
@@ -375,12 +376,12 @@ function newTweet(tweetInfo, userOfTweetId){
 function newUserMention(tweetInfo, tweetId){
 	for(i=0;i<tweetInfo.entities.user_mentions.length;i++){
 		var currentUserMention = tweetInfo.entities.user_mentions[i];
-		mySqlConnection.query("SELECT * FROM twitterusers WHERE twitterUserTwitterId = ?", [currentUserMention.id], function(error, result){
+		mySqlConnection.query("SELECT * FROM twitterusers WHERE twitterUserTwitterId = ?", [currentUserMention.id_str], function(error, result){
 			if(error != null){
 				console.log(error)
 			}
 			if(result.length == 0){
-				newUserInfo = {twitterUserName: currentUserMention.name, twitterUserScreenName: currentUserMention.screen_name, twitterUserTwitterId: currentUserMention.id}
+				newUserInfo = {twitterUserName: currentUserMention.name, twitterUserScreenName: currentUserMention.screen_name, twitterUserTwitterId: currentUserMention.id_str}
 				mySqlConnection.query("INSERT INTO twitterusers SET ?", newUserInfo, function(error, result){
 					if(error != null){
 						console.log(currentUserMention.id)
