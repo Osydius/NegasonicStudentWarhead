@@ -42,11 +42,11 @@ process.on ('SIGINT', gracefulShutdown);
 /********** GET METHODS **********/
 app.get('/getPlayers.html', function (request, response) {
 	getFootballPlayers(response);
-})
+});
 
 app.get('/getClubs.html', function (request, response) {
 	getFootballClubs(response);
-})
+});
 
 /********** POST METHODS **********/
 app.post('/getAllTweets.html', function(request, response){
@@ -55,6 +55,10 @@ app.post('/getAllTweets.html', function(request, response){
 
 app.post('/getAnyTweets.html', function(request, response){
 	getAnyTweets(request.body, response);
+});
+
+app.post('/findClubTwitterHandle.html', function(request, response){
+	findClubTwitterHandle(request.body, response);
 });
 
 function getAllTweets(clientData, response){
@@ -258,10 +262,18 @@ function getFootballClubs(response){
 	});
 }
 
+function findClubTwitterHandle(data, response){
+	mySqlConnection.query("SELECT footballClubTwitterHandle FROM footballClubs WHERE footballClubName = ?", [data], function(error, result){
+		returnClubTwitterHandle = JSON.stringify(result);
+		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+		response.end(returnClubs);
+	});
+}
+
 function insertNewTweets(tweetInfo){
 	if(tweetInfo.length > 0){
 		for(i=0;i<tweetInfo.length;i++){
-			newTwitterUser(tweetInfo[i].user);
+			newTwitterUser(tweetInfo[i]);
 			var tweetInfo = {};
 			var tweetUsers = {};
 			var tweetHashtags = {};
@@ -277,16 +289,27 @@ function insertNewTweets(tweetInfo){
 	// });
 }
 
-function newTwitterUser(userInfo){
+function newTwitterUser(tweetInfo){
+	var userInfo = tweetInfo.user;
 	var newUserInfo = {twitterUserName: userInfo.name, twitterUserScreenName: userInfo.screen_name, twitterUserTwitterId: userInfo.id};
 
 	mySqlConnection.query("SELECT * FROM twitterusers WHERE twitterUserTwitterId = ?", [userInfo.id], function(error, result){
 		if(result.length == 0){
 			mySqlConnection.query("INSERT INTO twitterusers SET ?", newUserInfo, function(error, result){
-				console.log(result);
+				tweetUserId = result.insertId;
+				newTweet(tweetInfo, tweetUserId);
 			})
+		} else {
+			console.log(result);
+			newTweet(tweetInfo, result[0].twitterUserId);
 		}	
 	});
+}
+
+function newTweet(tweetInfo, userOfTweetId){
+	var newCreatedAtTime = new Date(Date.parse(tweetInfo.created_at)).getTime();
+	var newDateAdded = new Date().getTime();
+	var newTweetInfo = {twitterUserId: userOfTweetId, tweetCreatedAt: newCreatedAtTime, tweetText: tweetInfo.text, tweetDateAdded: newDateAdded};
 }
 
 
@@ -302,5 +325,5 @@ function gracefulShutdown(){
 	setTimeout(function() {
 	   console.error("Could not close connections in time, forcefully shutting down");
 	   process.exit()
-	}, 10*1000);
+	}, 5*1000);
 }
