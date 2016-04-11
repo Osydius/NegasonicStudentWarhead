@@ -272,6 +272,7 @@ function findPlayersTwitterHandle(data, response){
 	var totalSearches = data.length;
 	var currentPlayerSearch = 0;
 	var currentResults = [];
+	console.log("Looking for " + totalSearches + " players.");
 	if(data.length > 0){
 		findPlayerTwitterHandle(data, totalSearches, currentPlayerSearch, currentResults, response);
 	} else {
@@ -282,14 +283,18 @@ function findPlayersTwitterHandle(data, response){
 }
 
 function findPlayerTwitterHandle(playerNames, totalSearches, currentPlayerSearch, currentResults, response){
+	console.log("Search number: " + currentPlayerSearch);
 	mySqlConnection.query("SELECT * FROM footballplayers WHERE footballPlayerName = ?", [playerNames[currentPlayerSearch]], function(error, result){
 		if(result.length > 0){
-			currentResults.concat(result);
+			console.log(result);
+			currentResults.push(result);
+			console.log(currentResults);
 		}
-		if(currentPlayerSearch < totalSearches){
+		if(currentPlayerSearch < totalSearches - 1){
 			currentPlayerSearch++;
 			findPlayerTwitterHandle(playerNames, totalSearches, currentPlayerSearch, currentResults, response);
 		} else {
+			console.log(currentResults);
 			currentResults = JSON.stringify(currentResults);
 			response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 			response.end(currentResults);
@@ -307,23 +312,22 @@ function insertNewTweets(allTweets){
 
 function newTwitterUser(tweetInfo){
 	var userInfo = tweetInfo.user;
-	var newUserInfo = {twitterUserName: userInfo.name, twitterUserScreenName: userInfo.screen_name, twitterUserTwitterId: userInfo.id_str};
+	var newUserInfo = {twitterUserName: userInfo.name, twitterUserScreenName: userInfo.screen_name, twitterUserTwitterId: userInfo.id};
 
-	mySqlConnection.query("SELECT * FROM twitterusers WHERE twitterUserTwitterId = ?", [userInfo.id_str], function(error, result){
+	mySqlConnection.query('SELECT * FROM twitterusers WHERE twitterUserTwitterId = ?', [userInfo.id], function(error, result){
 		if(error != null){
 			console.log(error)
 		}
-		console.log(result);
 		if(result.length == 0){
 			mySqlConnection.query("INSERT INTO twitterusers SET ?", newUserInfo, function(error, result){
 				if(error != null){
 					console.log(error)
 				}
 				tweetUserId = result.insertId;
-				//newTweet(tweetInfo, tweetUserId);
+				newTweet(tweetInfo, tweetUserId);
 			});
 		} else {
-			//newTweet(tweetInfo, result[0].twitterUserId);
+			newTweet(tweetInfo, result[0].twitterUserId);
 		}	
 	});
 }
