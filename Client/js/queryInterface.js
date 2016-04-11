@@ -76,7 +76,8 @@ $.fn.serializeObject = function (eventId) {
     };
 
     /**
-    * 
+    * Called when either of the form buttons are clicked, collects the id of the button
+    * that triggered the call and hands control over to serializeObject()
     */
     function buttonClick() {
         var form = $('#myForm');
@@ -88,36 +89,27 @@ $.fn.serializeObject = function (eventId) {
     }
 
     /**
-    * Called when either form button is pressed. Validates the input in the form fields.
-    * If invalid input is entered the user is given a warning, if the input is valid then
-    * the input is sent to the server.
+    * Takes serialized input data and uses this to make a call to check that the team entered 
+    * exists in the database.
+    * @param {Object} userInput - the input that the user has entered into the form
+    @ @param {String} eventId - the id of the button that was pressed
     */
     function validateTeamInput(userInput, eventId) {
-        //validate the team input, if it is valid then the next validation method will
-        //be called if not an alert will be displayed
+        //make a call to retrieve the relevant data from database if it exists.
         fetchClubTwitterHandle(userInput, JSON.stringify(userInput.team),eventId);
-
-        // will need to check players, hashtags and keywords are all suitable
-        //check that the hashtags entered meet hashtag requirements
-
-        /**
-        invalidHashtagRules = validateHashtags(userInput.hashtags);
-        if(invalidHashtagRules.length > 0){
-            alert("Hashtag validation has failed\nHashtags must not:"+invalidHashtagRules);
-            return false;
-        }
-
-        //if this stage has been reached validations passed so run the ajax query
-        if(eventId == "sendALLButton"){
-            sendALLAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
-        } else if (eventId == "sendANYButton"){
-            sendANYAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
-        }*/
-
         
         return false;
     }
 
+    /**
+    * If team validation failed display an alert and cease function, else amend the input object
+    * to contain the twitter handle for the team rather than its name. Checks hashtags are valid 
+    * and either displays a warning or carries out the call to twitter depending on the outcome
+    * of this validation check.
+    * @param {Object} userInput - the input that the user has entered into the form
+    * @param {Array} data - the data collected from the database, will either be empty or contain handle
+    * @param {String} eventId - the id of the button that was pressed
+    */
     function validateRemainingInput(userInput,data,eventId){
         //check to see if a match could be found for the team in the database
         if(data.length == 0){
@@ -146,6 +138,13 @@ $.fn.serializeObject = function (eventId) {
         }
     }
 
+    /**
+    * Sends an AJAX call that attempts to retrieve the relevant twitter handle for the entered
+    * team if it exists.
+    * @param {Object} userInput - the input that the user has entered into the form
+    * @param {Array} data - the data collected from the database, will either be empty or contain handle
+    * @param {String} eventId - the id of the button that was pressed
+    */
     function fetchClubTwitterHandle(userInput, data,eventId){
         $.ajax({
             dataType: 'json',
@@ -162,10 +161,12 @@ $.fn.serializeObject = function (eventId) {
         });
     }
 
-    //takes an array of all the hashtags that the user has entered
-    //returns an array of violated hashtag rules
+    /**
+    * Takes an array of all the hashtags that the user has entered. Checks that these meet validation rules:
+    * no spaces, no special characters, doesn't start with a number, doesn't contain a number only.
+    * @param {Array} hashtagArray - the hashtags the user has entered into the search
+    */
     function validateHashtags(hashtagArray){
-        
             var invalidHashtagRules = [];
             //rules for a valid hashtag:
             var noSpaces = "- contain spaces";
@@ -203,7 +204,7 @@ $.fn.serializeObject = function (eventId) {
             return output;
     }
 
-    //Set the onclick events for the buttons as being the send data function
+    //Set the onclick events for the buttons as being the buttonClick function
     var sendALLButton = document.getElementById('sendALLButton');
     sendALLButton.onclick = buttonClick;
 
@@ -667,7 +668,6 @@ function generateMapMarker(geoTweet, map){
 /**
 * Listens to the team input field and generates autocomplete suggestions as the user types.
 */
-
 $(document).ready(function() {
     $.ajax({
         type: 'GET',
