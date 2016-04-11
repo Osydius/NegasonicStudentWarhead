@@ -72,85 +72,120 @@ $.fn.serializeObject = function (eventId) {
                 }
             }
         });
-        validateInput(o, eventId);
+        validateTeamInput(o, eventId);
     };
 
     /**
-    * 
+    * Called when either of the form buttons are clicked, collects the id of the button
+    * that triggered the call and hands control over to serializeObject()
     */
     function buttonClick() {
         var form = $('#myForm');
         
-
-        //invalidHashtagRules = validateHashtags(userInput.hashtags);
-
         var id = event.target.id;
         JSON.stringify($('form').serializeObject(id));
 
         return false;
-
-        /*
-        if(id == "sendALLButton"){
-            sendALLAjaxQuery('http://localhost:3000/', JSON.stringify($('form').serializeObject()));
-        } else if (id == "sendANYButton"){
-            sendANYAjaxQuery('http://localhost:3000/', JSON.stringify($('form').serializeObject()));
-        }
-        return false;*/
     }
 
     /**
-    * Called when either form button is pressed. Validates the input in the form fields.
-    * If invalid input is entered the user is given a warning, if the input is valid then
-    * the input is sent to the server.
+    * Takes serialized input data and uses this to make a call to check that the team entered 
+    * exists in the database.
+    * @param {Object} userInput - the input that the user has entered into the form
+    @ @param {String} eventId - the id of the button that was pressed
     */
-    function validateInput(userInput, eventId) {
-        // will need to check players, hashtags and keywords are all suitable
-        //check that the hashtags entered meet hashtag requirements
-        console.log(userInput);
+    function validateTeamInput(userInput, eventId) {
+        //make a call to retrieve the relevant data from database if it exists.
+        fetchClubTwitterHandle(userInput, JSON.stringify(userInput.team),eventId);
+        
+        return false;
+    }
 
-        console.log('passed in ' +JSON.stringify(userInput.team));
+    /**
+    * If team validation failed display an alert and cease function, else amend the input object
+    * to contain the twitter handle for the team rather than its name. Checks hashtags are valid 
+    * and either displays a warning or carries out the call to twitter depending on the outcome
+    * of this validation check.
+    * @param {Object} userInput - the input that the user has entered into the form
+    * @param {Array} data - the data collected from the database, will either be empty or contain handle
+    * @param {String} eventId - the id of the button that was pressed
+    */
+    function validateRemainingInput(userInput,data,eventId){
+        //check to see if a match could be found for the team in the database
+        if(data.length == 0){
+            //the team entered has not been recognised in the database
+            alert("Team validation has failed\nA team must be chosen from the options available");
+            return false;
+        } else {
+            //change the team name
+            userInput.team = [data[0].footballClubTwitterHandle]
+            
+            //now validate the players
+            fetchPlayersTwitterHandles(userInput, JSON.stringify(userInput.players),eventId);
 
+            //the team validation passed so move on to validate the hashtags
+            invalidHashtagRules = validateHashtags(userInput.hashtags);
+            if(invalidHashtagRules.length > 0){
+                alert("Hashtag validation has failed\nHashtags must not:"+invalidHashtagRules);
+                return false;
+            }
 
+            //if this stage has been reached validations passed so run the ajax query
+            console.log(eventId)
+            if(eventId == "sendALLButton"){
+                sendALLAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
+            } else if (eventId == "sendANYButton"){
+                sendANYAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
+            }
+        }
+    }
+
+    /**
+    * Sends an AJAX call that attempts to retrieve the relevant twitter handle for the entered
+    * team if it exists.
+    * @param {Object} userInput - the input that the user has entered into the form
+    * @param {Array} data - the data collected from the database, will either be empty or contain handle
+    * @param {String} eventId - the id of the button that was pressed
+    */
+    function fetchClubTwitterHandle(userInput, data,eventId){
         $.ajax({
             dataType: 'json',
             contentType: "application/json",
             type: 'POST',
             url: 'http://localhost:3000/findClubTwitterHandle.html',
-            data: JSON.stringify(userInput.team),
+            data: data,
             success: function (data) {
-                console.log(data);
-                console.log('success ' +data)
+                validateRemainingInput(userInput,data,eventId);
             },
             error: function (xhr, status, error) {
                 console.log('Error: ' + error.message);
-               
             }
         });
-
-
-        invalidHashtagRules = validateHashtags(userInput.hashtags);
-        if(invalidHashtagRules.length > 0){
-            alert("Hashtag validation has failed\nHashtags must not:"+invalidHashtagRules);
-            return false;
-        }
-
-        //if this stage has been reached validations passed so run the ajax query
-        if(eventId == "sendALLButton"){
-            sendALLAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
-        } else if (eventId == "sendANYButton"){
-            sendANYAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
-        }
-
-        
-        return false;
-        
-
     }
 
-    //takes an array of all the hashtags that the user has entered
-    //returns an array of violated hashtag rules
+    function fetchPlayersTwitterHandles(userInput, data, eventId){
+        $.ajax({
+            dataType: 'json',
+            contentType: "application/json",
+            type: 'POST',
+            url: 'http://localhost:3000/findPlayersTwitterHandle.html',
+            data: data,
+            success: function (data) {
+                console.log('success')
+                console.log(data)
+            },
+            error: function (xhr, status, error) {
+                console.log('Error: ' + error.message);
+            }
+        });
+    }
+
+    /**
+    * Takes an array of all the hashtags that the user has entered. Checks that these meet validation rules:
+    * no spaces, no special characters, doesn't start with a number, doesn't contain a number only.
+    * @param {Array} hashtagArray - the hashtags the user has entered into the search
+    */
     function validateHashtags(hashtagArray){
-        
             var invalidHashtagRules = [];
             //rules for a valid hashtag:
             var noSpaces = "- contain spaces";
@@ -188,13 +223,12 @@ $.fn.serializeObject = function (eventId) {
             return output;
     }
 
-    //Set the onclick events for the buttons as being the send data function
+    //Set the onclick events for the buttons as being the buttonClick function
     var sendALLButton = document.getElementById('sendALLButton');
     sendALLButton.onclick = buttonClick;
 
     var sendANYButton = document.getElementById('sendANYButton');
     sendANYButton.onclick = buttonClick;
-
 
 
 // Section 2: Handle the response that is sent back from the server to get retrieved tweets and stats ---------------------------------------------------------------------------------------------------
@@ -653,7 +687,6 @@ function generateMapMarker(geoTweet, map){
 /**
 * Listens to the team input field and generates autocomplete suggestions as the user types.
 */
-
 $(document).ready(function() {
     $.ajax({
         type: 'GET',
@@ -666,6 +699,68 @@ $(document).ready(function() {
             $( "#team" ).autocomplete({
            source: clubs
         });
+        },
+        error: function (xhr, status, error) {
+            console.log('Error: ' + error.message);
+        }
+    });
+});
+
+/**
+* Listens to the player input field and generates autocomplete suggestions as the user types. If a user is 
+* selected from the drop down then pressing enter will insert a comma and allow the autocomplete to be used 
+* again. 
+* This code was adapted from the example shown on the JQuery Autocomplete plugin website:
+* http://jqueryui.com/autocomplete/#multiple
+*/
+$(document).ready(function() {
+    $.ajax({
+        type: 'GET',
+        url: 'http://localhost:3000/getPlayers.html',
+        success: function (data) {
+            var players =[]
+            for(i=0; i<data.length; i++){
+                players.push(data[i].name);
+            }
+            
+            function split( val ) {
+              return val.split( /,\s*/ );
+            }
+            function extractLast( term ) {
+              return split( term ).pop();
+            }
+         
+            $( "#players" )
+              // don't navigate away from the field on tab when selecting an item
+              .bind( "keydown", function( event ) {
+                if ( event.keyCode === $.ui.keyCode.TAB &&
+                    $( this ).autocomplete( "instance" ).menu.active ) {
+                  event.preventDefault();
+                }
+              })
+              .autocomplete({
+                minLength: 0,
+                source: function( request, response ) {
+                  // delegate back to autocomplete, but extract the last term
+                  response( $.ui.autocomplete.filter(
+                    players, extractLast( request.term ) ) );
+                },
+                focus: function() {
+                  // prevent value inserted on focus
+                  return false;
+                },
+                select: function( event, ui ) {
+                  var terms = split( this.value );
+                  // remove the current input
+                  terms.pop();
+                  // add the selected item
+                  terms.push( ui.item.value );
+                  // add placeholder to get the comma-and-space at the end
+                  terms.push( "" );
+                  this.value = terms.join( ", " );
+                  return false;
+                }
+            });
         },
         error: function (xhr, status, error) {
             console.log('Error: ' + error.message);
