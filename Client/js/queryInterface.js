@@ -72,7 +72,7 @@ $.fn.serializeObject = function (eventId) {
                 }
             }
         });
-        validateInput(o, eventId);
+        validateTeamInput(o, eventId);
     };
 
     /**
@@ -81,21 +81,10 @@ $.fn.serializeObject = function (eventId) {
     function buttonClick() {
         var form = $('#myForm');
         
-
-        //invalidHashtagRules = validateHashtags(userInput.hashtags);
-
         var id = event.target.id;
         JSON.stringify($('form').serializeObject(id));
 
         return false;
-
-        /*
-        if(id == "sendALLButton"){
-            sendALLAjaxQuery('http://localhost:3000/', JSON.stringify($('form').serializeObject()));
-        } else if (id == "sendANYButton"){
-            sendANYAjaxQuery('http://localhost:3000/', JSON.stringify($('form').serializeObject()));
-        }
-        return false;*/
     }
 
     /**
@@ -103,30 +92,15 @@ $.fn.serializeObject = function (eventId) {
     * If invalid input is entered the user is given a warning, if the input is valid then
     * the input is sent to the server.
     */
-    function validateInput(userInput, eventId) {
+    function validateTeamInput(userInput, eventId) {
+        //validate the team input, if it is valid then the next validation method will
+        //be called if not an alert will be displayed
+        fetchClubTwitterHandle(userInput, JSON.stringify(userInput.team),eventId);
+
         // will need to check players, hashtags and keywords are all suitable
         //check that the hashtags entered meet hashtag requirements
-        console.log(userInput);
 
-        console.log('passed in ' +JSON.stringify(userInput.team));
-
-
-        $.ajax({
-            dataType: 'json',
-            contentType: "application/json",
-            type: 'POST',
-            url: 'http://localhost:3000/findClubTwitterHandle.html',
-            data: JSON.stringify(userInput.team),
-            success: function (data) {
-                console.log('success ' +data)
-            },
-            error: function (xhr, status, error) {
-                console.log('Error: ' + error.message);
-               
-            }
-        });
-
-
+        /**
         invalidHashtagRules = validateHashtags(userInput.hashtags);
         if(invalidHashtagRules.length > 0){
             alert("Hashtag validation has failed\nHashtags must not:"+invalidHashtagRules);
@@ -138,12 +112,54 @@ $.fn.serializeObject = function (eventId) {
             sendALLAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
         } else if (eventId == "sendANYButton"){
             sendANYAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
-        }
+        }*/
 
         
         return false;
-        
+    }
 
+    function validateRemainingInput(userInput,data,eventId){
+        //check to see if a match could be found for the team in the database
+        if(data.length == 0){
+            //the team entered has not been recognised in the database
+            alert("Team validation has failed\nA team must be chosen from the options available");
+            return false;
+        } else {
+            //change the team name
+            userInput.team = [data[0].footballClubTwitterHandle]
+            console.log(userInput)
+
+            //the team validation passed so move on to validate the hashtags
+            invalidHashtagRules = validateHashtags(userInput.hashtags);
+            if(invalidHashtagRules.length > 0){
+                alert("Hashtag validation has failed\nHashtags must not:"+invalidHashtagRules);
+                return false;
+            }
+
+            //if this stage has been reached validations passed so run the ajax query
+            console.log(eventId)
+            if(eventId == "sendALLButton"){
+                sendALLAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
+            } else if (eventId == "sendANYButton"){
+                sendANYAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
+            }
+        }
+    }
+
+    function fetchClubTwitterHandle(userInput, data,eventId){
+        $.ajax({
+            dataType: 'json',
+            contentType: "application/json",
+            type: 'POST',
+            url: 'http://localhost:3000/findClubTwitterHandle.html',
+            data: data,
+            success: function (data) {
+                validateRemainingInput(userInput,data,eventId);
+            },
+            error: function (xhr, status, error) {
+                console.log('Error: ' + error.message);
+            }
+        });
     }
 
     //takes an array of all the hashtags that the user has entered
@@ -193,7 +209,6 @@ $.fn.serializeObject = function (eventId) {
 
     var sendANYButton = document.getElementById('sendANYButton');
     sendANYButton.onclick = buttonClick;
-
 
 
 // Section 2: Handle the response that is sent back from the server to get retrieved tweets and stats ---------------------------------------------------------------------------------------------------
