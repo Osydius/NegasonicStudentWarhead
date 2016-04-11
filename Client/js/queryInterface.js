@@ -119,7 +119,9 @@ $.fn.serializeObject = function (eventId) {
         } else {
             //change the team name
             userInput.team = [data[0].footballClubTwitterHandle]
-            console.log(userInput)
+            
+            //now validate the players
+            fetchPlayersTwitterHandles(userInput, JSON.stringify(userInput.players),eventId);
 
             //the team validation passed so move on to validate the hashtags
             invalidHashtagRules = validateHashtags(userInput.hashtags);
@@ -154,6 +156,23 @@ $.fn.serializeObject = function (eventId) {
             data: data,
             success: function (data) {
                 validateRemainingInput(userInput,data,eventId);
+            },
+            error: function (xhr, status, error) {
+                console.log('Error: ' + error.message);
+            }
+        });
+    }
+
+    function fetchPlayersTwitterHandles(userInput, data, eventId){
+        $.ajax({
+            dataType: 'json',
+            contentType: "application/json",
+            type: 'POST',
+            url: 'http://localhost:3000/findPlayersTwitterHandle.html',
+            data: data,
+            success: function (data) {
+                console.log('success')
+                console.log(data)
             },
             error: function (xhr, status, error) {
                 console.log('Error: ' + error.message);
@@ -680,6 +699,68 @@ $(document).ready(function() {
             $( "#team" ).autocomplete({
            source: clubs
         });
+        },
+        error: function (xhr, status, error) {
+            console.log('Error: ' + error.message);
+        }
+    });
+});
+
+/**
+* Listens to the player input field and generates autocomplete suggestions as the user types. If a user is 
+* selected from the drop down then pressing enter will insert a comma and allow the autocomplete to be used 
+* again. 
+* This code was adapted from the example shown on the JQuery Autocomplete plugin website:
+* http://jqueryui.com/autocomplete/#multiple
+*/
+$(document).ready(function() {
+    $.ajax({
+        type: 'GET',
+        url: 'http://localhost:3000/getPlayers.html',
+        success: function (data) {
+            var players =[]
+            for(i=0; i<data.length; i++){
+                players.push(data[i].name);
+            }
+            
+            function split( val ) {
+              return val.split( /,\s*/ );
+            }
+            function extractLast( term ) {
+              return split( term ).pop();
+            }
+         
+            $( "#players" )
+              // don't navigate away from the field on tab when selecting an item
+              .bind( "keydown", function( event ) {
+                if ( event.keyCode === $.ui.keyCode.TAB &&
+                    $( this ).autocomplete( "instance" ).menu.active ) {
+                  event.preventDefault();
+                }
+              })
+              .autocomplete({
+                minLength: 0,
+                source: function( request, response ) {
+                  // delegate back to autocomplete, but extract the last term
+                  response( $.ui.autocomplete.filter(
+                    players, extractLast( request.term ) ) );
+                },
+                focus: function() {
+                  // prevent value inserted on focus
+                  return false;
+                },
+                select: function( event, ui ) {
+                  var terms = split( this.value );
+                  // remove the current input
+                  terms.pop();
+                  // add the selected item
+                  terms.push( ui.item.value );
+                  // add placeholder to get the comma-and-space at the end
+                  terms.push( "" );
+                  this.value = terms.join( ", " );
+                  return false;
+                }
+            });
         },
         error: function (xhr, status, error) {
             console.log('Error: ' + error.message);
