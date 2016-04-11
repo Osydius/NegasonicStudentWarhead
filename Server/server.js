@@ -104,10 +104,15 @@ function getAllTweets(clientData, response, currentResults){
 	}
 
 	// query, response, totalTweets, lastId, currentTweets
-	queryTwitter(twitterQuery, response, totalTweetsWanted - currentResults.length, 0, currentResults);
+	if(currentResults == null){
+		queryTwitter(twitterQuery, response, totalTweetsWanted, 0, null, currentResults);
+	} else {
+		queryTwitter(twitterQuery, response, totalTweetsWanted - currentResults.length, 0, null, currentResults);
+	}
+	
 }
 
-function getAnyTweets(clientData, response){
+function getAnyTweets(clientData, response, currentResults){
 	var twitterQuery = '';
 	var queryTeam = clientData.team;
 	var queryPlayers = clientData.players;
@@ -153,10 +158,14 @@ function getAnyTweets(clientData, response){
 			}
 		}
 	}
-	queryTwitter(twitterQuery, response, 300, 0, null);
+	if(currentResults == null){
+		queryTwitter(twitterQuery, response, totalTweetsWanted, 0, null, currentResults);
+	} else {
+		queryTwitter(twitterQuery, response, totalTweetsWanted - currentResults.length, 0, null, currentResults);
+	}
 }
 
-function queryTwitter(query, response, totalTweets, lastId, returnedTweets){
+function queryTwitter(query, response, totalTweets, lastId, returnedTweets, databaseTweets){
 	var maxRetrievableTweets = 100;
 	if(returnedTweets == null){
 		twitterClient.get('search/tweets', { q: query, count: maxRetrievableTweets }, function(error, data, result) {
@@ -170,9 +179,15 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets){
 					returnedTweets = data.statuses;
 					var maxId = data.statuses[data.statuses.length - 1].id - 1;
 					if(returnedTweets != undefined && returnedTweets.length < totalTweets && data.statuses.length == maxRetrievableTweets){
-						queryTwitter(query, response, totalTweets, maxId, returnedTweets);
+						queryTwitter(query, response, totalTweets, maxId, returnedTweets, databaseTweets);
 					} else {
 						insertNewTweets(returnedTweets);
+						if(databaseTweets != null){
+							for(var i=0; i < databaseTweets.length;i++){
+								returnedTweets.push(databaseTweets[i]);
+							}
+						}
+						console.log(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 		    			response.end(returnedTweets);
@@ -191,9 +206,15 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets){
 					returnedTweets = returnedTweets.concat(data.statuses);
 					var maxId = data.statuses[data.statuses.length - 1].id - 1;
 					if(returnedTweets != undefined && returnedTweets.length < totalTweets && data.statuses.length == maxRetrievableTweets){
-						queryTwitter(query, response, totalTweets, maxId, returnedTweets);
+						queryTwitter(query, response, totalTweets, maxId, returnedTweets, databaseTweets);
 					} else {
 						insertNewTweets(returnedTweets);
+						if(databaseTweets != null){
+							for(var i=0; i < databaseTweets.length;i++){
+								returnedTweets.push(databaseTweets[i]);
+							}
+						}
+						console.log(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 		    			response.end(returnedTweets);
@@ -204,29 +225,6 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets){
 			}
 		});
 	}
-	// twitterClient.get('search/tweets', { q: query, count:100 }, function(err, data, result) {
-	//   if(data.statuses.length > 0){
-	//   	var returnTweets = data.statuses;
-	//   	var maxId = data.statuses[data.statuses.length - 1].id - 1;
-
-	//   	twitterClient.get('search/tweets', { q: query, count:100, max_id:maxId}, function(err, data, result) {
-	//   		if(data.statuses.length > 0){
-	// 	  		returnTweets = returnTweets.concat(data.statuses);
-	// 	  		maxId = data.statuses[data.statuses.length - 1].id - 1;
-
-	// 	  		twitterClient.get('search/tweets', { q: query, count:100, max_id:maxId}, function(err, data, result) {
-	// 	  			if(data.statuses.length > 0){
-	// 			  		returnTweets = returnTweets.concat(data.statuses);
-	// 			  		returnTweets = JSON.stringify(returnTweets);
-
-	// 			  		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-	// 		    		response.end(returnTweets);
-	// 		    	}
-	// 		  	});
-	// 	  	}
-	//   	});
-	//   }
-	// }); 
 }
 
 function getFootballPlayers(response){
