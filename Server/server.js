@@ -249,7 +249,7 @@ function getFootballClubs(response){
 			var newClub = {}
 			newClub.name = clubs[i].footballClubName;
 			newClub.twitterHandle = clubs[i].footballClubTwitterHandle;
-			returnClubs[i] = newPlayer;
+			returnClubs[i] = newClub;
 		}
 
 		returnClubs = JSON.stringify(returnClubs);
