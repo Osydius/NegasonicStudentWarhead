@@ -266,7 +266,7 @@ function findClubTwitterHandle(data, response){
 	mySqlConnection.query("SELECT footballClubTwitterHandle FROM footballClubs WHERE footballClubName = ?", [data], function(error, result){
 		returnClubTwitterHandle = JSON.stringify(result);
 		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-		response.end(returnClubs);
+		response.end(returnClubTwitterHandle);
 	});
 }
 
