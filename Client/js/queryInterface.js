@@ -118,6 +118,7 @@ $.fn.serializeObject = function (eventId) {
             url: 'http://localhost:3000/findClubTwitterHandle.html',
             data: JSON.stringify(userInput.team),
             success: function (data) {
+                console.log(data);
                 console.log('success ' +data)
             },
             error: function (xhr, status, error) {

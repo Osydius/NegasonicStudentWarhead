@@ -61,6 +61,10 @@ app.post('/findClubTwitterHandle.html', function(request, response){
 	findClubTwitterHandle(request.body, response);
 });
 
+app.post('/findPlayersTwitterHandle.html', function(request, response){
+	findPlayersTwitterHandle(request.body, response);
+});
+
 function getAllTweets(clientData, response){
 	var twitterQuery = '';
 	var queryTeam = clientData.team;
@@ -270,23 +274,18 @@ function findClubTwitterHandle(data, response){
 	});
 }
 
-function insertNewTweets(tweetInfo){
-	if(tweetInfo.length > 0){
-		for(i=0;i<tweetInfo.length;i++){
-			newTwitterUser(tweetInfo[i]);
-			var tweetInfo = {};
-			var tweetUsers = {};
-			var tweetHashtags = {};
-			var tweetUrls = {};
-			var tweetMedia = {};
+function findPlayersTwitterHandle(data, response){
+	for(var i=0;i<data.length;i++){
+		mySqlConnection.query("SELECT * FROM footballplayers")
+	}
+}
+
+function insertNewTweets(allTweets){
+	if(allTweets.length > 0){
+		for(i=0;i<allTweets.length;i++){
+			newTwitterUser(allTweets[i]);
 		}
 	}
-
-	
-	// console.log(query);
-	// mySqlConnection.query(query, function(error, result){
-	// 	console.log(result);
-	// });
 }
 
 function newTwitterUser(tweetInfo){
@@ -294,22 +293,158 @@ function newTwitterUser(tweetInfo){
 	var newUserInfo = {twitterUserName: userInfo.name, twitterUserScreenName: userInfo.screen_name, twitterUserTwitterId: userInfo.id};
 
 	mySqlConnection.query("SELECT * FROM twitterusers WHERE twitterUserTwitterId = ?", [userInfo.id], function(error, result){
+		if(error != null){
+			console.log(error)
+		}
 		if(result.length == 0){
 			mySqlConnection.query("INSERT INTO twitterusers SET ?", newUserInfo, function(error, result){
+				if(error != null){
+					console.log(error)
+				}
 				tweetUserId = result.insertId;
 				newTweet(tweetInfo, tweetUserId);
-			})
+			});
 		} else {
-			console.log(result);
 			newTweet(tweetInfo, result[0].twitterUserId);
 		}	
 	});
 }
 
 function newTweet(tweetInfo, userOfTweetId){
-	var newCreatedAtTime = new Date(Date.parse(tweetInfo.created_at)).getTime();
-	var newDateAdded = new Date().getTime();
+	var newCreatedAtTime = new Date(Date.parse(tweetInfo.created_at));
+	var newDateAdded = new Date();
 	var newTweetInfo = {twitterUserId: userOfTweetId, tweetCreatedAt: newCreatedAtTime, tweetText: tweetInfo.text, tweetDateAdded: newDateAdded};
+
+	mySqlConnection.query("SELECT * FROM tweets WHERE tweetText = ?", [tweetInfo.text], function(error, result){
+		if(error != null){
+			console.log(error)
+		}
+		if(result.length == 0){
+			mySqlConnection.query("INSERT INTO tweets SET ?", newTweetInfo, function(error, result){
+				if(error != null){
+					console.log(error)
+				}
+				newInsertedTweetId = result.insertId;
+
+				//now add any tweet links (users, hashtags, url, media)
+				if(tweetInfo.entities.user_mentions.length > 0){
+					newUserMention(tweetInfo, newInsertedTweetId);
+				}
+
+				if(tweetInfo.entities.hashtags.length > 0){
+					newTwitterHashtags(tweetInfo, newInsertedTweetId);
+				}
+
+				if(tweetInfo.entities.urls > 0){
+					newTwitterUrls(tweetInfo, newInsertedTweetId);
+				}
+			});
+		} else {
+			//now add any tweet links (users, hashtags, url, media)
+			if(tweetInfo.entities.user_mentions.length > 0){
+				newUserMention(tweetInfo, result[0].tweetId);
+			}
+
+			if(tweetInfo.entities.hashtags.length > 0){
+				newTwitterHashtags(tweetInfo, result[0].tweetId);
+			}
+
+			if(tweetInfo.entities.urls > 0){
+				newTwitterUrls(tweetInfo, result[0].tweetId);
+			}
+		}
+	});
+}
+
+function newUserMention(tweetInfo, tweetId){
+	for(i=0;i<tweetInfo.entities.user_mentions.length;i++){
+		var currentUserMention = tweetInfo.entities.user_mentions[i];
+		mySqlConnection.query("SELECT * FROM twitterusers WHERE twitterUserTwitterId = ?", [currentUserMention.id], function(error, result){
+			if(error != null){
+				console.log(error)
+			}
+			if(result.length == 0){
+				newUserInfo = {twitterUserName: currentUserMention.name, twitterUserScreenName: currentUserMention.screen_name, twitterUserTwitterId: currentUserMention.id}
+				mySqlConnection.query("INSERT INTO twitterusers SET ?", newUserInfo, function(error, result){
+					if(error != null){
+						console.log(currentUserMention.id)
+						console.log(error)
+					}
+					userMentionUserId = result.insertId;
+					newTweetUser(tweetId, userMentionUserId, currentUserMention.indices[0], currentUserMention.indices[1]);
+				});
+			} else {
+				newTweetUser(tweetId, result[0].twitterUserId, currentUserMention.indices[0], currentUserMention.indices[1]);
+			}
+		});
+	}
+}
+
+function newTweetUser(tweetId, userMentionId, startPoint, endPoint){
+	var newTweetUserInfo = {tweetId: tweetId, twitterUserId: userMentionId, tweetStartPoint: startPoint, tweetEndPoint: endPoint};
+	mySqlConnection.query("INSERT INTO tweetusers SET ?", newTweetUserInfo, function(error, result){
+		//TODO: Check for any errors
+	});
+}
+
+function newTwitterHashtags(tweetInfo, tweetId){
+	for(var i=0; i< tweetInfo.entities.hashtags.length;i++){
+		var currentHashtag = tweetInfo.entities.hashtags[i];
+		mySqlConnection.query("SELECT * FROM twitterhashtags WHERE twitterHashtagText = ?", [currentHashtag.text], function(error, result){
+			if(error != null){
+				console.log(error)
+			}
+			if(result.length == 0){
+				newHashtagInfo = {twitterHashtagText: currentHashtag.text};
+				mySqlConnection.query("INSERT INTO twitterhashtags SET ?", newHashtagInfo, function(error, result){
+					if(error != null){
+						console.log(error)
+					}
+					newHashtagId = result.insertId;
+					newTweetTwitterHashtag(tweetId, newHashtagId, currentHashtag.indices[0], currentHashtag.indices[1]);
+				});
+			} else {
+				newTweetTwitterHashtag(tweetId, result[0].twitterHashtagId, currentHashtag.indices[0], currentHashtag.indices[1]);
+			}
+		});
+	}
+}
+
+function newTweetTwitterHashtag(tweetId, hashtagId, startPoint, endPoint){
+	var newTweetTwitterHashtagInfo = {tweetTwitterHashtagTweetId: tweetId, tweetTwitterHashtagTwitterHashtagId: hashtagId, tweetTwitterHashtagStartPoint: startPoint, tweetTwitterHashtagEndPoint: endPoint};
+	mySqlConnection.query("INSERT INTO tweettwitterhashtags SET ?", newTweetTwitterHashtagInfo, function(error, result){
+		//TODO: Check for any errors
+	});
+}
+
+function newTwitterUrls(tweetInfo, tweetId){
+	for(var i=0; i< tweetInfo.entities.urls.length;i++){
+		var currentUrl = tweetInfo.entities.urls[i];
+		mySqlConnection.query("SELECT * FROM twitterurls WHERE url = ?", [currentUrl.url], function(error, result){
+			if(error != null){
+				console.log(error)
+			}
+			if(result.length == 0){
+				newUrlInfo = {twitterUrlUrl: currentUrl.url, twitterUrlExpandedUrl: currentUrl.expanded_url, twitterUrlDisplayUrl: currentUrl.display_url};
+				mySqlConnection.query("INSERT INTO twitterurls SET ?", newUrlInfo, function(error, result){
+					if(error != null){
+						console.log(error)
+					}
+					newUrlId = result.insertId;
+					newTweetTwitterUrl(tweetId, newUrlId, currentUrl.indices[0], currentUrl.indices[1]);
+				});
+			} else {
+				newTweetTwitterUrl(tweetId, result[0].twitterUrlId, currentUrl.indices[0], currentUrl.indices[1]);
+			}
+		});
+	}
+}
+
+function newTweetTwitterUrl(tweetId, urlId, startPoint, endPoint){
+	var newTweetTwitterUrlInfo = {tweetTwitterUrlTweetId: tweetId, tweetTwitterUrlTwitterUrlId: hashtagId, tweetTwitterUrlStartPoint: startPoint, tweetTwitterUrlEndPoint: endPoint};
+	mySqlConnection.query("INSERT INTO tweettwitterurls SET ?", newTweetTwitterUrlInfo, function(error, result){
+		//TODO: Check for any errors
+	});
 }
 
 
