@@ -135,7 +135,7 @@ img{
 /* Tweet display */
 #retrieved_tweet_display {
   overflow-y: auto;
-  height: 500px;
+  height: 700px;
   clear:both;
   width: 80%;
 }

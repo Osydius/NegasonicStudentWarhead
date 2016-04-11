@@ -51,7 +51,7 @@ function sendANYAjaxQuery(url, data) {
  * Iterates through the terms entered in the form and packages them into an object
  * that contains all of the fields split into separate terms where appropriate.
  */
-$.fn.serializeObject = function () {
+$.fn.serializeObject = function (eventId) {
         var o = {};
         var a = this.serializeArray();
         $.each(a, function () {
@@ -72,33 +72,127 @@ $.fn.serializeObject = function () {
                 }
             }
         });
-        return o;
+        validateInput(o, eventId);
     };
 
     /**
-    * Called when either form button is pressed. Checks to see which button is pressed and then
-    * calls the appropriate method to handle this.
+    * 
     */
-    function sendData() {
-        var form = $('#myForm')
+    function buttonClick() {
+        var form = $('#myForm');
+        
+
+        //invalidHashtagRules = validateHashtags(userInput.hashtags);
 
         var id = event.target.id;
+        JSON.stringify($('form').serializeObject(id));
+
+        return false;
+
+        /*
         if(id == "sendALLButton"){
             sendALLAjaxQuery('http://localhost:3000/', JSON.stringify($('form').serializeObject()));
         } else if (id == "sendANYButton"){
             sendANYAjaxQuery('http://localhost:3000/', JSON.stringify($('form').serializeObject()));
         }
+        return false;*/
+    }
+
+    /**
+    * Called when either form button is pressed. Validates the input in the form fields.
+    * If invalid input is entered the user is given a warning, if the input is valid then
+    * the input is sent to the server.
+    */
+    function validateInput(userInput, eventId) {
+        // will need to check players, hashtags and keywords are all suitable
+        //check that the hashtags entered meet hashtag requirements
+        console.log(userInput);
+
+        console.log('passed in ' +JSON.stringify(userInput.team));
+
+
+        $.ajax({
+            dataType: 'json',
+            contentType: "application/json",
+            type: 'POST',
+            url: 'http://localhost:3000/findClubTwitterHandle.html',
+            data: JSON.stringify(userInput.team),
+            success: function (data) {
+                console.log('success ' +data)
+            },
+            error: function (xhr, status, error) {
+                console.log('Error: ' + error.message);
+               
+            }
+        });
+
+
+        invalidHashtagRules = validateHashtags(userInput.hashtags);
+        if(invalidHashtagRules.length > 0){
+            alert("Hashtag validation has failed\nHashtags must not:"+invalidHashtagRules);
+            return false;
+        }
+
+        //if this stage has been reached validations passed so run the ajax query
+        if(eventId == "sendALLButton"){
+            sendALLAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
+        } else if (eventId == "sendANYButton"){
+            sendANYAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
+        }
 
         
         return false;
+        
+
+    }
+
+    //takes an array of all the hashtags that the user has entered
+    //returns an array of violated hashtag rules
+    function validateHashtags(hashtagArray){
+        
+            var invalidHashtagRules = [];
+            //rules for a valid hashtag:
+            var noSpaces = "- contain spaces";
+            var specialCharacters = "- contain special characters";
+            var startNoOrNoOnly = "- start with a number or be only a number";
+            
+            for(var i = 0; i<hashtagArray.length; i++){
+                //for 1 make sure no spaces/not empty
+                if(hashtagArray[i].indexOf(' ') !== -1){
+                    //validation fail
+                    invalidHashtagRules.push(noSpaces);  
+                }
+
+                //for 2 make sure no special characters
+                if(/[-!$%^&*()_+|~=`\\#{}\[\]:";'<>?,.\/]/.test(hashtagArray[i])){
+                    //validation fail
+                    invalidHashtagRules.push(specialCharacters);
+                }
+
+                //for 3 make sure that it doesn't start with a number
+                if(/^[0-9]/.test(hashtagArray[i])){
+                    //vaildation fail
+                    invalidHashtagRules.push(startNoOrNoOnly);
+                }
+            }
+            //remove duplicates
+            invalidHashtagRules = invalidHashtagRules.filter( function( item, index, inputArray ) {
+               return inputArray.indexOf(item) == index;
+            });
+
+            var output = "";
+            for(var i=0; i<invalidHashtagRules.length; i++){
+                output += "\n"+invalidHashtagRules[i]
+            }
+            return output;
     }
 
     //Set the onclick events for the buttons as being the send data function
     var sendALLButton = document.getElementById('sendALLButton');
-    sendALLButton.onclick = sendData;
+    sendALLButton.onclick = buttonClick;
 
     var sendANYButton = document.getElementById('sendANYButton');
-    sendANYButton.onclick = sendData;
+    sendANYButton.onclick = buttonClick;
 
 
 
@@ -558,6 +652,7 @@ function generateMapMarker(geoTweet, map){
 /**
 * Listens to the team input field and generates autocomplete suggestions as the user types.
 */
+
 $(document).ready(function() {
     $.ajax({
         type: 'GET',
