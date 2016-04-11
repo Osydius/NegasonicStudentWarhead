@@ -288,6 +288,7 @@ function findPlayerTwitterHandle(playerNames, totalSearches, currentPlayerSearch
 		}
 		if(currentPlayerSearch < totalSearches){
 			currentPlayerSearch++;
+			findPlayerTwitterHandle(playerNames, totalSearches, currentPlayerSearch, currentResults, response);
 		} else {
 			currentResults = JSON.stringify(currentResults);
 			response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
