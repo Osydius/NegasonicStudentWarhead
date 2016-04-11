@@ -7,7 +7,7 @@
 // Section 1: Validate and send data to server-----------------------------------------------------------------------------------------------------------------
 /**
  * Sends an Ajax call that ANDs all the query terms together
- * @param {String} url - 
+ * @param {String} url - base url to the server
  * @param {Object} data - the terms that were entered into the form
  */
 function sendALLAjaxQuery(url, data) {
@@ -29,7 +29,7 @@ function sendALLAjaxQuery(url, data) {
 
 /**
  * Sends an Ajax call that ORs all the query terms together
- * @param {String} url - 
+ * @param {String} url - base url to the server
  * @param {Object} data - the terms that were entered into the form
  */
 function sendANYAjaxQuery(url, data) {
