@@ -520,7 +520,10 @@ function newTweetUser(tweetId, userMentionId, startPoint, endPoint){
 }
 
 /*
-*
+* This loops through all the hashtags in the current tweet and adds them to the database. It checks to see if each hashtag that has been 
+* mentioned already exists in the database, if not then it adds the hashtag and then creates a link between the tweet and the hashtag.
+* @param {object} tweetInfo - An object that contains all the information about the tweet currently being added to the database.
+* @param {integer} tweetId - The ID of the tweet that the hashtags are associated with so that they can be linked.
 */
 function newTwitterHashtags(tweetInfo, tweetId){
 	for(var i=0; i< tweetInfo.entities.hashtags.length;i++){
@@ -545,6 +548,14 @@ function newTwitterHashtags(tweetInfo, tweetId){
 	}
 }
 
+/*
+* This function is designed to create the link between hashtags associated with a tweet and a tweet.
+* The start and end point are provided so that the text in the tweet can be replaced when displayed for a user.
+* @param {integer} tweetId - The ID of the tweet that the user mentions are associated with so that they can be linked.
+* @param {integer} hashtagId - The ID of the hashtag that the tweet uses.
+* @param {integer} startPoint - The starting position where the hashtag is used.
+* @param {integer} endPoint - The end position where the hashtag is used.
+*/
 function newTweetTwitterHashtag(tweetId, hashtagId, startPoint, endPoint){
 	var newTweetTwitterHashtagInfo = {tweetTwitterHashtagTweetId: tweetId, tweetTwitterHashtagTwitterHashtagId: hashtagId, tweetTwitterHashtagStartPoint: startPoint, tweetTwitterHashtagEndPoint: endPoint};
 	mySqlConnection.query("INSERT INTO tweettwitterhashtags SET ?", newTweetTwitterHashtagInfo, function(error, result){
@@ -552,6 +563,12 @@ function newTweetTwitterHashtag(tweetId, hashtagId, startPoint, endPoint){
 	});
 }
 
+/*
+* This loops through all the urls in the current tweet and adds them to the database. It checks to see if each url that has been 
+* mentioned already exists in the database, if not then it adds the url and then creates a link between the tweet and the url.
+* @param {object} tweetInfo - An object that contains all the information about the tweet currently being added to the database.
+* @param {integer} tweetId - The ID of the tweet that the urls are associated with so that they can be linked.
+*/
 function newTwitterUrls(tweetInfo, tweetId){
 	for(var i=0; i< tweetInfo.entities.urls.length;i++){
 		var currentUrl = tweetInfo.entities.urls[i];
@@ -575,6 +592,14 @@ function newTwitterUrls(tweetInfo, tweetId){
 	}
 }
 
+/*
+* This function is designed to create the link between hashtags associated with a tweet and a tweet.
+* The start and end point are provided so that the text in the tweet can be replaced when displayed for a user.
+* @param {integer} tweetId - The ID of the tweet that the user mentions are associated with so that they can be linked.
+* @param {integer} hashtagId - The ID of the url that the tweet uses.
+* @param {integer} startPoint - The starting position where the url is used.
+* @param {integer} endPoint - The end position where the url is used.
+*/
 function newTweetTwitterUrl(tweetId, urlId, startPoint, endPoint){
 	var newTweetTwitterUrlInfo = {tweetTwitterUrlTweetId: tweetId, tweetTwitterUrlTwitterUrlId: hashtagId, tweetTwitterUrlStartPoint: startPoint, tweetTwitterUrlEndPoint: endPoint};
 	mySqlConnection.query("INSERT INTO tweettwitterurls SET ?", newTweetTwitterUrlInfo, function(error, result){
@@ -582,6 +607,14 @@ function newTweetTwitterUrl(tweetId, urlId, startPoint, endPoint){
 	});
 }
 
+/*
+* This function starts to get all the tweets from the database using the query data provided by the user. 
+* It starts by getting all the users that are associated with the query and then passes it to another function that deals with
+* getting the actual tweets.
+* @param {object} queryData - An object that stores the query data. Contains the team name, potential players, potential hashtags
+*                             and potential keywords that will be used in the query.
+* @param {object} response - A response object that will be used to return the results once they have been found.
+*/
 function getAllDatabaseTweets(queryData, response){
 	var currentResults = [];
 	mySqlConnection.query('SELECT * FROM twitterusers WHERE twitterUserScreenName = ?', [queryData.team], function(error, result){
@@ -602,6 +635,19 @@ function getAllDatabaseTweets(queryData, response){
 	});
 }
 
+/*
+* This function currently finds all the tweets in the database recusively that are associated with the users provided. 
+* It then checks to see if the tweets are relevant by checking to see if they contain the hashtags or keywords.
+* @param {object} - An object that stores the query data. Contains the team name, potential players, potential hashtags
+*                             and potential keywords that will be used in the query.
+* @param {response} - A response object that will be used to return the results once they have been found.
+* @param {array} tweetUserIds - An array of user IDs that tweets need to be associated with.
+* @param {integer} currentSearch - The index of the current user ID that is being searched with.
+* @param {array} currentResults - An array containing all of the results of the database query up to this point.
+* @param {object} userInfo - An object that contains the user information for the first user that has been found. This reduces
+*                            the need to use repeated information if duplicates are created.
+* @param {string} queryType - The type of query that is currently being used 'any' or 'all'.
+*/
 function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch, currentResults, userInfo, queryType){
 	mySqlConnection.query('SELECT * FROM tweets WHERE twitterUserId = ?', [tweetUserIds[currentSearch]], function(error, result){
 		if(result.length != 0){
@@ -616,15 +662,12 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 		} else {
 			var tempReturnResults = [];
 			// loop through all the tweets asscociated with the users
-			console.log("looping through all the tweets");
 			for(var i=0; i<currentResults.length; i++){
 				//check to see if the current tweet is relevant
-				console.log("testing tweet number: " + (i + 1));
 				var currentTweet = currentResults[i];
 				var sendBack = true;
 				
 				if(queryData.hashtags.length != 0){
-					console.log("looking for hashtags");
 					for(var j=0;j<queryData.hashtags.length;j++){
 						if(currentTweet.tweetText.indexOf('#' + queryData.hashtags[j]) == -1){
 							sendBack = false;
@@ -633,7 +676,6 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 				}
 				
 				if(queryData.keywords.length != 0){
-					console.log("looking for keywords");
 					for(var j=0;j<queryData.keywords.length;j++){
 						if(currentTweet.tweetText.indexOf('#' + queryData.keywords[j]) == -1){
 							sendBack = false;
@@ -668,10 +710,9 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 
 			if(returnResults.length < totalTweetsWanted){
 				if(queryType == 'all'){
-					console.log("need more tweets")
 					getAllTweets(queryData, response, returnResults);
 				} else if(queryType == 'any'){
-
+					getAnyTweets(queryData, response, returnResults);
 				} else {
 					returnResults = JSON.stringify(returnResults);
 					response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
@@ -688,6 +729,10 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 	});
 }
 
+/*
+* Intended to be used when shutting down the server and to close any connections that might still exist.
+* After an allotted time, the server timesouts and forces the shutdown of the server.
+*/
 function gracefulShutdown(){
 	console.log("Received kill signal, shutting down gracefully.");
 	mySqlConnection.end();
