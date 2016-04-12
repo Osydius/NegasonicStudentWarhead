@@ -1,1 +1,0 @@
---- You must use the config file to adjust the details to connect to the mysql database and twitter developer tokens ---

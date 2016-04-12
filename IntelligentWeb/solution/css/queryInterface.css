@@ -1,0 +1,210 @@
+/*
+*
+* Authors: James Hall and Nicola Willis
+* Team: NegasonicStudentWarhead
+*
+*/
+
+/* Style for basic elements */
+h1 {
+  margin-top: 0px;
+  color:white;
+}
+
+body {
+  background-color: #f2f2f2;
+  font-family: 'Oswald', sans-serif;
+}
+
+hr{
+  margin:0px;
+  padding:0px;
+  color: #ff9933;
+  background-color: #ff9933;
+  height: 5px;
+  border: none;
+}
+
+p{
+  margin: 0px;
+  padding: 0px;
+  display:inline;
+}
+
+img{
+  margin-right: 5px;
+  clear:both;
+}
+
+/* Form and title bar at the top of the page */
+#title_bar {
+  background-color: #004d1a;
+  color:white;
+  padding:10px;
+}
+
+#track_discussions_form {
+	text-align: center;
+  background-color: #009933;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  color: white;
+  margin:0px;
+}
+
+/* Gold, Silver, Bronze place styles, used in statistics displays */
+.place0{
+  color: #BAB407;
+  font-size: 120%;
+}
+
+.place1{
+  color: #B0B0B0;
+  font-size: 120%;
+}
+
+.place2{
+  color: #cd7f32;
+  font-size: 120%;
+}
+
+/* Top words display */
+#top_words{
+  border-radius: 4px;
+  background: #333333; /* For browsers that do not support gradients */
+  background: -webkit-linear-gradient(#333333, #808080); /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(#333333, #808080); /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(#333333, #808080); /* For Firefox 3.6 to 15 */
+  background: linear-gradient(#333333, #808080); /* Standard syntax */
+  padding: 10px;
+  border: 1px solid #333333;
+  color: white;
+}
+
+/* Styles for Top 10 Users */
+#top_users_container{
+  color:white;
+  background-color: #333333;
+  border-radius: 4px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+#top_users{
+  float:left;
+  overflow-y: auto;
+  height: 401px;
+}
+
+.usertile{
+  background-color: #4d4d4d;
+  border-radius: 4px;
+  padding: 5px;
+  margin-bottom: 2px;
+  height:55px;
+}
+
+.userDisplay {
+    width: 400px;
+    padding: 5px;
+    overflow: hidden;
+}
+
+.userDisplay img {
+    margin-right: 15px;
+    float: left;
+}
+
+/* Set the dimensions for the google map */
+#map {
+  width: 85%;
+  height: 600px;
+  background-color: #CCC;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.display_tile {
+  background-color: white;
+  border-radius: 4px;
+  margin: 10px;
+  display: none;
+  padding: 10px;
+}
+
+/* Tweet display */
+#retrieved_tweet_display {
+  overflow-y: auto;
+  height: 700px;
+  clear:both;
+  width: 80%;
+}
+
+.tweettile{
+  padding: 5px;
+  margin-bottom:2px;
+  border-radius: 4px;
+  border: 1px solid #cccccc;
+}
+
+/* Styles for the form fields and buttons */
+#inputTable{
+  width:100%;
+}
+
+.namefield{
+  width: 40%;
+  text-align: right;
+}
+
+.inputfield{
+  width: 20%;
+}
+
+.descfield{
+  width:40%;
+  text-align: left;
+}
+
+.borderless td, .borderless th {
+    border: none;
+}
+
+/* Give the form boxes an orange outline to match the form button style */
+input[type=text] {
+    box-shadow: 0 0 0 2pt #ff9933;
+    font-family: 'Oswald', sans-serif;
+}
+
+input[type=text]:focus {
+    box-shadow: 0 0 0 2pt #ff9933;
+}
+
+textarea:focus, input:focus, input[type]:focus, .uneditable-input:focus {   
+    border-color: #ff9933;
+    box-shadow: 0 0 0 2pt #ff9933;
+    outline: #ff9933 thick;
+}
+
+/* Style for the form buttons generated using http://charliepark.org/bootstrap_buttons/ */
+.btn-custom {
+  font-family: 'Oswald', sans-serif;
+  background-color: hsl(30, 100%, 60%) !important;
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#ff9932", endColorstr="#ff9932");
+  background-image: -khtml-gradient(linear, left top, left bottom, from(#ff9932), to(#ff9932));
+  background-image: -moz-linear-gradient(top, #ff9932, #ff9932);
+  background-image: -ms-linear-gradient(top, #ff9932, #ff9932);
+  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff9932), color-stop(100%, #ff9932));
+  background-image: -webkit-linear-gradient(top, #ff9932, #ff9932);
+  background-image: -o-linear-gradient(top, #ff9932, #ff9932);
+  background-image: linear-gradient(#ff9932, #ff9932);
+  border-color: #ff9932 #ff9932 hsl(30, 100%, 60%);
+  color: #fff !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.00);
+  -webkit-font-smoothing: antialiased;
+}
+
+
+
+
