@@ -5,6 +5,7 @@
 *
 */
 
+//Require nodejs plugins
 var protocol = require('http');
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -17,22 +18,24 @@ var Twit = require('twit');
 var mysql = require('mysql');
 var config = require('./config.js');
 
+//Initialise twitter and mysql connections
 var twitterClient = new Twit(config.twitter);
 var mySqlConnection = mysql.createConnection(config.mysql);
 mySqlConnection.connect();
 
+//Initialise server information
 var fileServer = new (static.Server)();
 var portNo = config.portNo;
 
+//Initialise server variables
 var totalTweetsWanted = 300;
 
+//Create the express app
 var app = express();
 app.use(bodyParser.json());
 app.use(cors());
-// app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-//   extended: true
-// }));
 
+//Create and sart the server
 var server = app.listen(portNo);
 
 // listen for TERM signal .e.g. kill 
@@ -68,6 +71,17 @@ app.post('/findPlayersTwitterHandle.html', function(request, response){
 	findPlayersTwitterHandle(request.body, response);
 });
 
+/*
+* Takes a set of query data to generate a query that will be used to get tweets from Twitter using the search API.
+* The query using AND logic to search for all applicable tweets. When a team and player Twitter-handles are provided,
+* the query will return only tweets from those users.
+* @param {object} clientData - holds the query data that a user has provided. Contains a team's Twitter-handle,
+*                              an array of players' Twitter-handles, an array of hashtags and an array of keywords 
+*                              that are used to build the Twitter query.
+* @param {object} response - The response object that will be used to send the results of the user's query back to the
+*                            user.
+* @param {array} currentResults - An array that holds all the relevant tweets from the database.
+*/
 function getAllTweets(clientData, response, currentResults){
 	var twitterQuery = '';
 	var queryTeam = clientData.team;
@@ -75,7 +89,10 @@ function getAllTweets(clientData, response, currentResults){
 	var queryHashtags = clientData.hashtags;
 	var queryKeywords = clientData.keywords;
 
+	//Add the team's Twitter-handle to the Twitter query
 	twitterQuery = twitterQuery + ' from:' + encodeURIComponent(queryTeam);
+
+	//Add all the players' Twitter-handles to the Twitter query
 	if(queryPlayers !== undefined){
 		queryPlayersCount = queryPlayers.length;
 		for(i = 0; i < queryPlayersCount; i++){
@@ -85,6 +102,7 @@ function getAllTweets(clientData, response, currentResults){
 		}
 	}
 
+	//Add all the hashtags to the Twitter query
 	if(queryHashtags !== undefined){
 		queryHashtagsCount = queryHashtags.length;
 		for(i = 0; i < queryHashtagsCount; i++){
@@ -94,6 +112,7 @@ function getAllTweets(clientData, response, currentResults){
 		}
 	}
 
+	//Add all the keywords to the Twitter query
 	if(queryKeywords !== undefined){
 		queryKeywordsCount = queryKeywords.length;
 		for(i = 0; i < queryKeywordsCount; i++){
@@ -103,7 +122,7 @@ function getAllTweets(clientData, response, currentResults){
 		}
 	}
 
-	// query, response, totalTweets, lastId, currentTweets
+	//Execute the Twitter query asking to find 300 tweets, unless tweets were found in the database
 	if(currentResults == null){
 		queryTwitter(twitterQuery, response, totalTweetsWanted, 0, null, currentResults);
 	} else {
@@ -112,6 +131,17 @@ function getAllTweets(clientData, response, currentResults){
 	
 }
 
+/*
+* Takes a set of query data to generate a query that will be used to get tweets from Twitter using the search API.
+* The query using OR logic to search for all applicable tweets. When a team and player Twitter-handles are provided,
+* the query will return only tweets from those users.
+* @param {object} clientData - holds the query data that a user has provided. Contains a team's Twitter-handle,
+*                              an array of players' Twitter-handles, an array of hashtags and an array of keywords 
+*                              that are used to build the Twitter query.
+* @param {object} response - The response object that will be used to send the results of the user's query back to the
+*                            user.
+* @param {array} currentResults - An array that holds all the relevant tweets from the database.
+*/
 function getAnyTweets(clientData, response, currentResults){
 	var twitterQuery = '';
 	var queryTeam = clientData.team;
@@ -119,8 +149,10 @@ function getAnyTweets(clientData, response, currentResults){
 	var queryHashtags = clientData.hashtags;
 	var queryKeywords = clientData.keywords;
 
+	//Add the team's Twitter-handle to the Twitter query
 	twitterQuery = twitterQuery + ' from:' + encodeURIComponent(queryTeam);
 
+	//Add all the players' Twitter-handles to the Twitter query
 	if(queryPlayers !== undefined){
 		queryPlayersCount = queryPlayers.length;
 		for(i = 0; i < queryPlayersCount; i++){
@@ -134,6 +166,8 @@ function getAnyTweets(clientData, response, currentResults){
 			}
 		}
 	}
+
+	//Add all the hashtags to the Twitter query
 	if(queryHashtags !== undefined){
 		queryHashtagsCount = queryHashtags.length;
 		for(i = 0; i < queryHashtagsCount; i++){
@@ -146,6 +180,8 @@ function getAnyTweets(clientData, response, currentResults){
 			}
 		}
 	}
+
+	//Add all the keywords to the Twitter query
 	if(queryKeywords !== undefined){
 		queryKeywordsCount = queryKeywords.length;
 		for(i = 0; i < queryKeywordsCount; i++){
@@ -158,6 +194,8 @@ function getAnyTweets(clientData, response, currentResults){
 			}
 		}
 	}
+
+	//Execute the Twitter query asking to find 300 tweets, unless tweets were found in the database
 	if(currentResults == null){
 		queryTwitter(twitterQuery, response, totalTweetsWanted, 0, null, currentResults);
 	} else {
@@ -165,6 +203,21 @@ function getAnyTweets(clientData, response, currentResults){
 	}
 }
 
+/*
+* Takes a generated Twitter query and collates the results until the requested amount of tweets has been found.
+* This function is recursive, due to the Twitter API only returning a maximum of 100 tweets for each query, multiple calls
+* must be made to reach the requested maximum. Once the maximum number of tweets has been reached or the query has been exhausted,
+* the results of returned to the user of the current query using the response object.
+* @param {string} query - The query that will be used to collect tweets from the Twitter search API.
+* @param {object} response - The object that will be used to return the results of the query to the user.
+* @param {integer} totalTweets - The upper limit of the number of tweets that must be found. Won't be reached if no more tweets can
+*                                be found for the query.
+* @param {integer} lastId - This is the id of the last tweet to be found, used when recursing through Twitter's data structure to reduce
+*                           duplicate tweets being returned.
+* @param {array} returnedTweets - An array of all the tweets that have been returned from the Twitter search API currently.
+* @param {array} databaseTweets - An array of all the tweets that the database returned. These will be combined with the tweets returned
+*                                 from the Twitter search API.
+*/
 function queryTwitter(query, response, totalTweets, lastId, returnedTweets, databaseTweets){
 	var maxRetrievableTweets = 100;
 	if(returnedTweets == null){
@@ -173,20 +226,20 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets, data
 				console.log(error);
 			} else if(data.statuses != undefined){
 				if(data.statuses.length > 0){
-					// add tweets to database
-
-					// build return tweets
 					returnedTweets = data.statuses;
 					var maxId = data.statuses[data.statuses.length - 1].id - 1;
+
 					if(returnedTweets != undefined && returnedTweets.length < totalTweets && data.statuses.length == maxRetrievableTweets){
 						queryTwitter(query, response, totalTweets, maxId, returnedTweets, databaseTweets);
 					} else {
 						insertNewTweets(returnedTweets);
+
 						if(databaseTweets != null){
 							for(var i=0; i < databaseTweets.length;i++){
 								returnedTweets.push(databaseTweets[i]);
 							}
 						}
+						//The following log returns all the tweets found so that they can be recorded.
 						console.log(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
@@ -214,6 +267,7 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets, data
 								returnedTweets.push(databaseTweets[i]);
 							}
 						}
+						//The following log returns all the tweets found so that they can be recorded.
 						console.log(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
@@ -227,6 +281,11 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets, data
 	}
 }
 
+/*
+* This function returns all the entries for football players in the database for use in validation.
+* The results are then passed to the user using the response object.
+* @param {object} response - The reponse object used to supply the database results to the user.
+*/
 function getFootballPlayers(response){
 	mySqlConnection.query("SELECT * FROM footballplayers", function(error, rows){
 		var players = rows;
@@ -244,6 +303,11 @@ function getFootballPlayers(response){
 	});
 }
 
+/*
+* This function returns all the entries for football clubs in the database for use in validation.
+* The results are then passed to the user using the response object.
+* @param {object} response - The reponse object used to supply the database results to the user.
+*/
 function getFootballClubs(response){
 	mySqlConnection.query("SELECT * FROM footballclubs", function(error, rows){
 		var clubs = rows;
@@ -261,6 +325,12 @@ function getFootballClubs(response){
 	});
 }
 
+/*
+* This function returns a Twitter handle of a specific club when given a football club name.
+* This is used for validating user input and to provide the Twitter handle to pass to the query. 
+* @param {object} data - The football club name that the user has specified.
+* @param {object} response - The response object used to return the result to the user.
+*/
 function findClubTwitterHandle(data, response){
 	mySqlConnection.query("SELECT footballClubTwitterHandle FROM footballClubs WHERE footballClubName = ?", [data], function(error, result){
 		returnClubTwitterHandle = JSON.stringify(result);
@@ -269,6 +339,12 @@ function findClubTwitterHandle(data, response){
 	});
 }
 
+/*
+* This function initiates a search for a Twitter handle of a specific player when given a football player name.
+* This is used for validating user input and to provide the Twitter handle to pass to the query. 
+* @param {object} data - the football player name that the user has specified.
+* @param {object} response - The response object used to return the result to the user.
+*/
 function findPlayersTwitterHandle(data, response){
 	var totalSearches = data.length;
 	var currentPlayerSearch = 0;
@@ -282,6 +358,15 @@ function findPlayersTwitterHandle(data, response){
 	
 }
 
+/*
+* Taking a list of player names, this function will recurse through the database to find each player and return
+* the Twitter handle of all the players that it finds. It then returns the results to the user that requested them.
+* @param {array} playerName - An array that contains all the names of the players to be searched for.
+* @param {integer} totalSearches - The total amount of searches that the function has to recurse for.
+* @param {integer} currentPlayerSearch - The index of the current player currently being searched for.
+* @param {array} currentResults - An array containing all the players that have been found in the database.
+* @param {object} response - The reponse object used to return the results to the user.
+*/
 function findPlayerTwitterHandle(playerNames, totalSearches, currentPlayerSearch, currentResults, response){
 	mySqlConnection.query("SELECT * FROM footballplayers WHERE footballPlayerName = ?", [playerNames[currentPlayerSearch]], function(error, result){
 		if(result.length > 0){
@@ -298,6 +383,11 @@ function findPlayerTwitterHandle(playerNames, totalSearches, currentPlayerSearch
 	});
 }
 
+/*
+* Taking all the tweets that have been found using the Twitter search API, loops through them and initiates their insertion
+* into the database.
+* @param {array} allTweets - An array containing all the tweets that have been returned from the Twitter search API.
+*/
 function insertNewTweets(allTweets){
 	if(allTweets.length > 0){
 		for(i=0;i<allTweets.length;i++){
@@ -306,6 +396,11 @@ function insertNewTweets(allTweets){
 	}
 }
 
+/*
+* This is the first step to add a tweet to the database. It checks if the user who wrote the tweet is currently in the database,
+* if not then that user is added.
+* @param {object} tweetInfo - An object that contains all the information about the tweet currently being added to the database.
+*/
 function newTwitterUser(tweetInfo){
 	var userInfo = tweetInfo.user;
 	var newUserInfo = {twitterUserName: userInfo.name, twitterUserScreenName: userInfo.screen_name, twitterUserTwitterId: userInfo.id};
@@ -328,6 +423,12 @@ function newTwitterUser(tweetInfo){
 	});
 }
 
+/*
+* This uses the database ID of the user asscociated with writing the tweet and the specific tweet information to add a new tweet to
+* the database. If the tweet already exists, by comparing the tweet ID, then it skips to the next stage of entering a tweet in the database.
+* @param {object} tweetInfo - An object that contains all the information about the tweet currently being added to the database.
+* @param {integer} userOfTweetId - The ID of database entry associated with the user who wrote the tweet.
+*/
 function newTweet(tweetInfo, userOfTweetId){
 	var newCreatedAtTime = new Date(Date.parse(tweetInfo.created_at));
 	var newDateAdded = new Date();
@@ -374,6 +475,12 @@ function newTweet(tweetInfo, userOfTweetId){
 	});
 }
 
+/*
+* This loops through all the user mentions in the current tweet and adds them to the database. It checks to see if each user that has been 
+* mentioned already exists in the database, if not then it adds the user and then creates a link between the tweet and the user.
+* @param {object} tweetInfo - An object that contains all the information about the tweet currently being added to the database.
+* @param {integer} tweetId - The ID of the tweet that the user mentions are associated with so that they can be linked.
+*/
 function newUserMention(tweetInfo, tweetId){
 	for(i=0;i<tweetInfo.entities.user_mentions.length;i++){
 		var currentUserMention = tweetInfo.entities.user_mentions[i];
@@ -397,6 +504,14 @@ function newUserMention(tweetInfo, tweetId){
 	}
 }
 
+/*
+* This function is designed to create the link between user mentions associated with a tweet and a user.
+* The start and end point are provided so that the text in the tweet can be replaced when displayed for a user.
+* @param {integer} tweetId - The ID of the tweet that the user mentions are associated with so that they can be linked.
+* @param {integer} userMentionId - The ID of the user that the tweet mentions.
+* @param {integer} startPoint - The starting position where the user is mentioned.
+* @param {integer} endPoint - The end position where the user is mentioned.
+*/
 function newTweetUser(tweetId, userMentionId, startPoint, endPoint){
 	var newTweetUserInfo = {tweetId: tweetId, twitterUserId: userMentionId, tweetStartPoint: startPoint, tweetEndPoint: endPoint};
 	mySqlConnection.query("INSERT INTO tweetusers SET ?", newTweetUserInfo, function(error, result){
@@ -404,6 +519,9 @@ function newTweetUser(tweetId, userMentionId, startPoint, endPoint){
 	});
 }
 
+/*
+*
+*/
 function newTwitterHashtags(tweetInfo, tweetId){
 	for(var i=0; i< tweetInfo.entities.hashtags.length;i++){
 		var currentHashtag = tweetInfo.entities.hashtags[i];
@@ -478,6 +596,8 @@ function getAllDatabaseTweets(queryData, response){
 				var newUser = {};
 			}
 			getDatabaseQueryTweets(queryData, response, userIdList, 0, [], userInfo, 'all')
+		} else {
+			getAllTweets(queryData, response, null)
 		}
 	});
 }
@@ -492,73 +612,81 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 
 		if(currentSearch != tweetUserIds.length - 1){
 			currentSearch++;
-			getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch++, currentResults, userInfo, queryType);
+			getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch, currentResults, userInfo, queryType);
 		} else {
-			if(queryData.players.length != 0){
-				//ADD IN GET TWEETS FROM PLAYERS
-				// getMoreQueryTweets(queryData, response, queryData.players, 0, currentResults);
-				var tempReturnResults = [];
-				for(var i=0; i<currentResults.length; i++){
-					var currentTweet = currentResults[i];
-					var sendBack = true;
-
-					for(var j=0; j<queryData.hashtags; j++){
+			var tempReturnResults = [];
+			// loop through all the tweets asscociated with the users
+			console.log("looping through all the tweets");
+			for(var i=0; i<currentResults.length; i++){
+				//check to see if the current tweet is relevant
+				console.log("testing tweet number: " + (i + 1));
+				var currentTweet = currentResults[i];
+				var sendBack = true;
+				
+				if(queryData.hashtags.length != 0){
+					console.log("looking for hashtags");
+					for(var j=0;j<queryData.hashtags.length;j++){
 						if(currentTweet.tweetText.indexOf('#' + queryData.hashtags[j]) == -1){
 							sendBack = false;
 						}
 					}
-
-					for(var j=0; j<queryData.keywords; j++){
-						if(currentTweet.tweetText.indexOf(queryData.keywords[j]) == -1){
+				}
+				
+				if(queryData.keywords.length != 0){
+					console.log("looking for keywords");
+					for(var j=0;j<queryData.keywords.length;j++){
+						if(currentTweet.tweetText.indexOf('#' + queryData.keywords[j]) == -1){
 							sendBack = false;
 						}
 					}
-
-					if(sendBack == true){
-						tempReturnResults.push(currentTweet);
-					}
 				}
 
-				var returnResults = [];
-				for(var i=0; i<tempReturnResults.length;i++){
-					var newReturnTweet = {};
-					newReturnTweet.id = tempReturnResults[i].tweetId;
-					newReturnTweet.text = tempReturnResults[i].tweetText;
-
-					var newTweetDate = new Date(tempReturnResults[i].tweetCreatedAt)
-					newReturnTweet.created_at = newTweetDate.toString();
-					newReturnTweet.user = userInfo;
-
-					var newTweetEntities = {};
-					newTweetEntities.hashtags = [];
-					newTweetEntities.user_mentions = [];
-					newTweetEntities.urls = [];
-					newTweetEntities.media = [];
-					newReturnTweet.entities = newTweetEntities;
-
-					returnResults.push(newReturnTweet);
+				if(sendBack){
+					tempReturnResults.push(currentTweet);
 				}
+			}
 
-				if(returnResults.length < totalTweetsWanted){
-					if(queryType == 'all'){
-						getAllTweets(queryData, response, returnResults);
-					} else if(queryType == 'any'){
+			var returnResults = [];
+			for(var i=0; i<tempReturnResults.length;i++){
+				var newReturnTweet = {};
+				newReturnTweet.id = tempReturnResults[i].tweetId;
+				newReturnTweet.text = tempReturnResults[i].tweetText;
 
-					} else {
-						returnResults = JSON.stringify(returnResults);
-						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-						response.end(returnResults);
-					}
+				var newTweetDate = new Date(tempReturnResults[i].tweetCreatedAt)
+				newReturnTweet.created_at = newTweetDate.toString();
+				newReturnTweet.user = userInfo;
+
+				var newTweetEntities = {};
+				newTweetEntities.hashtags = [];
+				newTweetEntities.user_mentions = [];
+				newTweetEntities.urls = [];
+				newTweetEntities.media = [];
+				newReturnTweet.entities = newTweetEntities;
+
+				returnResults.push(newReturnTweet);
+			}
+
+			if(returnResults.length < totalTweetsWanted){
+				if(queryType == 'all'){
+					console.log("need more tweets")
+					getAllTweets(queryData, response, returnResults);
+				} else if(queryType == 'any'){
+
+				} else {
+					returnResults = JSON.stringify(returnResults);
+					response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+					response.end(returnResults);
 				}
+			} else {
+				//The following log returns all the tweets found so that they can be recorded.
+				console.log(returnedTweets);
+				returnResults = JSON.stringify(returnResults);
+				response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+				response.end(returnResults);
 			}
 		}
 	});
 }
-
-function getMoreDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch, currentResults){
-
-}
-
 
 function gracefulShutdown(){
 	console.log("Received kill signal, shutting down gracefully.");

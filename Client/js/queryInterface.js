@@ -670,6 +670,7 @@ function generateMapMarker(geoTweet, map){
 * Listens to the team input field and generates autocomplete suggestions as the user types.
 */
 $(document).ready(function() {
+    console.log("document ready");
     $.ajax({
         type: 'GET',
         url: 'http://localhost:3000/getClubs.html',
@@ -678,9 +679,10 @@ $(document).ready(function() {
             for(i=0; i<data.length; i++){
                 clubs.push(data[i].name);
             }
+            console.log(clubs);
             $( "#team" ).autocomplete({
-           source: clubs
-        });
+                source: clubs
+            });
         },
         error: function (xhr, status, error) {
             console.log('Error: ' + error.message);
