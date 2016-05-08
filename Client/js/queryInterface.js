@@ -56,7 +56,6 @@ function sendANYAjaxQuery(url, data) {
 $.fn.serializeObject = function (eventId) {
         var o = {};
         var a = this.serializeArray();
-        console.log(a)
         $.each(a, function () {
             if (o[this.name] !== undefined) {
                 if (!o[this.name].push) {
@@ -75,6 +74,7 @@ $.fn.serializeObject = function (eventId) {
                 }
             }
         });
+        console.log(o)
         checkSomethingEntered(o, eventId);
     };
 
@@ -127,6 +127,7 @@ $.fn.serializeObject = function (eventId) {
             validatePlayerInput(userInput,eventId);
         } else {
             //a team has been entered so first check that this team exists in the database
+
             fetchClubTwitterHandle(userInput, JSON.stringify(userInput.team),eventId);
         }
         return false;

@@ -35,17 +35,18 @@ $.fn.serializeObject = function () {
                 o[this.name].push(this.value || '');
             } else {
                 
-                o[this.name] = this.value || '';
+                o[this.name] = [this.value] || [''];
                 
             }
         });
         validateInput(o);
     };
 
+
 function validateInput(userInput){
 	//check that the date isn't in past
 	//convert entered string into a date
-	var parts =userInput.date.trim().split('/');
+	var parts =userInput.date[0].trim().split('/');
 	var enteredDate = new Date(parts[2],parts[1]-1,parts[0]); 
 	//check that date isn't in the past
 	var now = new Date();
@@ -63,12 +64,69 @@ function validateTeamInput(userInput) {
     if (JSON.stringify(userInput.team1).length <= 4 || JSON.stringify(userInput.team2).length <= 4){
         //two teams were not entered so validation fail
         alert("Team validation failed\nYou must enter two teams");
-    } else {
-        //a team has been entered so first check that this team exists in the database
-        fetchClubTwitterHandle(userInput,eventId);
+    } else if(JSON.stringify(userInput.team1) == JSON.stringify(userInput.team2)){
+        alert("Team validation failed\nEntered teams cannot be the same");
+    }else {
+        //a team has been entered so check that they both exist in the database
+        fetchClubTwitterHandle(userInput,JSON.stringify(userInput.team1));
     }
     return false;
 }
+
+function sendDataToServer(userInput){
+    //all validations have passed
+    alert("send would have totes happended")
+    return false;
+}
+
+/**
+    * Sends an AJAX call that attempts to retrieve the relevant twitter handle for the entered
+    * team if it exists.
+    * @param {Object} userInput - the input that the user has entered into the form
+    * @param {Array} data - the data collected from the database, will either be empty or contain handle
+    * @param {String} eventId - the id of the button that was pressed
+    */
+    function fetchClubTwitterHandle(userInput,data){
+        $.ajax({
+            dataType: 'json',
+            contentType: "application/json",
+            type: 'POST',
+            url: 'http://localhost:3000/findClubTwitterHandle.html',
+            data: data,
+            success: function (data) {
+                if(data.length == 0){
+                    //the team entered has not been recognised in the database
+                    alert("Team validation has failed\nTeam 1 was not chosen from the options available");
+                    return false;
+                } else {
+                    //team 1 was valid so now repeat ajax for team 2
+                    team2 = JSON.stringify(userInput.team2)
+                    $.ajax({
+                        dataType: 'json',
+                        contentType: "application/json",
+                        type: 'POST',
+                        url: 'http://localhost:3000/findClubTwitterHandle.html',
+                        data: team2,
+                        success: function (team2) {
+                            if(team2.length == 0){
+                                //the team entered has not been recognised in the database
+                                alert("Team validation has failed\nTeam 2 was not chosen from the options available");
+                                return false;
+                            } else {
+                                sendDataToServer(userInput);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log('Error: ' + error.message);
+                        }
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log('Error: ' + error.message);
+            }
+        });
+    }
 
 
 
