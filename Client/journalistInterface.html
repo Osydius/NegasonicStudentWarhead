@@ -1,0 +1,80 @@
+<!--
+*
+* Authors: James Hall and Nicola Willis
+* Team: NegasonicStudentWarhead
+*
+-->
+
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Football Discussions</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <link href="../bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link rel="stylesheet" type="text/css" href="css/interfaces.css">
+    <!-- The three stylesheets below are for the JQuery autocomplete plugin, reference detailed in documentation -->
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.structure.css">
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.theme.css">
+    <!-- Google Oswald font, reference detailed in documentation -->
+    <link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
+</head>
+
+<body>
+
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBBScut2ShlRFbesdDNk4HKWEYeUmQPDGM"></script>
+
+    <div id="title_bar">
+        <h1>FOOTBALL SPY</h1>
+        <b>Track your favourite team and find out what is happening in the world of football using social media</b>
+    </div>
+
+    <!--A form to take 4 imputs from the user to create a query-->
+    <div id="generate_briefing_form">
+    	Not a journalist? Just try a twitter query instead<br>
+        <button class="btn btn-custom" onClick="parent.location='queryInterface.html'">Twitter Query</button>
+        <h3>Journalist Tool</h3>
+        <p>Enter the information below to get briefing info</p>
+        <br>
+        <br>
+        <form id="journalistForm">
+            <table id="inputTable">
+                <tr>
+                    <td class="namefield">Date: </td>
+                    <td class="inputfield"><input type="date" name="date" class="field" id="date"></td>
+                    <td class="descfield">    (Enter as dd/mm/yyyy)</td>
+                    
+                </tr>
+                <tr>
+                    <td class="namefield">Team 1: </td>
+                    <td class="inputfield"><input type="text" name="team1" class = "field" id="team1"></td>
+                    
+                </tr>
+                <tr>
+                    <td class="namefield">Team 2: </td>
+                    <td class="inputfield"><input type="text" name="team2" class = "field" id="team2"></td>
+                    
+                </tr>
+            </table>
+
+            <br><br>
+            <button id="generateBriefing" class="btn btn-custom">Generate Briefing</button>
+        </form>
+
+        
+    </div>
+
+    <hr>
+
+    
+
+
+    <script src="js/journalistInterface.js"></script>
+    <!--Javascript for the JQuery Autocomplete plugin, reference detailed in the documentatoin-->
+    <script src="js/jquery-ui.js"></script>
+    <script src="../bootstrap/js/bootstrap.min.js"></script>
+
+</body>
+</html>

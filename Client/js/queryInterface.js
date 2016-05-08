@@ -56,6 +56,7 @@ function sendANYAjaxQuery(url, data) {
 $.fn.serializeObject = function (eventId) {
         var o = {};
         var a = this.serializeArray();
+        console.log(a)
         $.each(a, function () {
             if (o[this.name] !== undefined) {
                 if (!o[this.name].push) {

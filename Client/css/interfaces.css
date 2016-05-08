@@ -43,7 +43,7 @@ img{
   padding:10px;
 }
 
-#track_discussions_form {
+#track_discussions_form, #generate_briefing_form {
 	text-align: center;
   background-color: #009933;
   padding-top: 10px;
@@ -177,6 +177,15 @@ input[type=text] {
 }
 
 input[type=text]:focus {
+    box-shadow: 0 0 0 2pt #ff9933;
+}
+
+input[type=date] {
+    box-shadow: 0 0 0 2pt #ff9933;
+    font-family: 'Oswald', sans-serif;
+}
+
+input[type=date]:focus {
     box-shadow: 0 0 0 2pt #ff9933;
 }
 
