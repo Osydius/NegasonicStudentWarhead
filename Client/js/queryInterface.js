@@ -50,7 +50,8 @@ function sendANYAjaxQuery(url, data) {
 
 /**
  * Iterates through the terms entered in the form and packages them into an object
- * that contains all of the fields split into separate terms where appropriate.
+ * that contains all of the fields split into separate terms where appropriate. Then
+ * kickstarts the validation process.
  */
 $.fn.serializeObject = function (eventId) {
         var o = {};
@@ -73,7 +74,7 @@ $.fn.serializeObject = function (eventId) {
                 }
             }
         });
-        validateTeamInput(o, eventId);
+        checkSomethingEntered(o, eventId);
     };
 
     /**
@@ -90,52 +91,87 @@ $.fn.serializeObject = function (eventId) {
     }
 
     /**
-    * Takes serialized input data and uses this to make a call to check that the team entered 
-    * exists in the database.
+    * Checks that at least some input has been provided in one of the fields. If not display an
+    * alert box informing the user that they must enter information, if it does then start the 
+    * validation process.
     * @param {Object} userInput - the input that the user has entered into the form
-    @ @param {String} eventId - the id of the button that was pressed
+    * @param {String} eventId - the id of the button that was pressed
+    */
+    function checkSomethingEntered(userInput, eventId){
+        var filteredPlayers = userInput.players
+        filteredPlayers = filteredPlayers.filter(function(n){ return n.trim() != ""});
+
+        if ( JSON.stringify(userInput.team).length <= 4 && filteredPlayers.length == 0 &&
+            JSON.stringify(userInput.hashtags).length <= 4 && JSON.stringify(userInput.keywords).length <= 4){
+            //user hasn't entered anything
+            alert("You must provide input to at least one field before you can perform a search");
+            return false;
+        } else {
+            //at least one field contains input so begin the validation process
+            validateTeamInput(userInput, eventId);
+        }
+    }
+
+    /**
+    * Takes serialized input data and uses this to make a call to check that the team entered 
+    * exists in the database if a team was entered, otherwise, validation is progressed
+    * to the rest of the input fields.
+    * @param {Object} userInput - the input that the user has entered into the form
+    * @param {String} eventId - the id of the button that was pressed
     */
     function validateTeamInput(userInput, eventId) {
         //make a call to retrieve the relevant data from database if it exists.
-        fetchClubTwitterHandle(userInput, JSON.stringify(userInput.team),eventId);
-        
+        if (JSON.stringify(userInput.team).length <= 4){
+            //a team wasn't entered so move onto the next stage of validation
+            validatePlayerInput(userInput,eventId);
+        } else {
+            //a team has been entered so first check that this team exists in the database
+            fetchClubTwitterHandle(userInput, JSON.stringify(userInput.team),eventId);
+        }
         return false;
     }
 
     /**
-    * If team validation failed display an alert and cease function, else amend the input object
-    * to contain the twitter handle for the team rather than its name. Checks hashtags are valid 
-    * and either displays a warning or carries out the call to twitter depending on the outcome
-    * of this validation check.
+    * Takes serialized input data and uses this to make a call to check that the players entered 
+    * all exist in the database if any players were entered, otherwise, validation is progressed
+    * to the rest of the input fields.
     * @param {Object} userInput - the input that the user has entered into the form
-    * @param {Array} data - the data collected from the database, will either be empty or contain handle
     * @param {String} eventId - the id of the button that was pressed
     */
-    function validateRemainingInput(userInput,data,eventId){
-        //check to see if a match could be found for the team in the database
-        if(data.length == 0){
-            //the team entered has not been recognised in the database
-            alert("Team validation has failed\nA team must be chosen from the options available");
-            return false;
+    function validatePlayerInput(userInput, eventId){
+        //purge the input of any blank entries
+        var filteredPlayers = userInput.players
+        filteredPlayers = filteredPlayers.filter(function(n){ return n.trim() != ""});
+
+        if(filteredPlayers.length > 0){
+            //players have been entered so check they exist in the database
+            fetchPlayersTwitterHandle(userInput, JSON.stringify(filteredPlayers), eventId);
         } else {
-            //change the team name
-            userInput.team = [data[0].footballClubTwitterHandle]
-            
+            //no players have been entered so move onto the next stage of validation
+            validateHashtagInput(userInput,eventId);
+        }       
+        return false;
+    }
 
-            //the team validation passed so move on to validate the hashtags
-            invalidHashtagRules = validateHashtags(userInput.hashtags);
-            if(invalidHashtagRules.length > 0){
-                alert("Hashtag validation has failed\nHashtags must not:"+invalidHashtagRules);
-                return false;
-            }
+    /**
+    * Checks that the entered hashtags meets twitters hashtag rules. If they do then
+    * carry out the API call that will retrieve the tweets as all validation has 
+    * passed.
+    * @param {Object} userInput - the input that the user has entered into the form
+    * @param {String} eventId - the id of the button that was pressed
+    */
+    function validateHashtagInput(userInput, eventId){
+        invalidHashtagRules = validateHashtags(userInput.hashtags);
+        if(invalidHashtagRules.length > 0){
+            alert("Hashtag validation has failed\nHashtags must not:"+invalidHashtagRules);
+            return false;
+        }
 
-            //if this stage has been reached validations passed so run the ajax query
-            console.log(eventId)
-            if(eventId == "sendALLButton"){
-                sendALLAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
-            } else if (eventId == "sendANYButton"){
-                sendANYAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
-            }
+        //if this stage has been reached validations passed so run the ajax query
+        if(eventId == "sendALLButton"){
+            sendALLAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
+        } else if (eventId == "sendANYButton"){
+            sendANYAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
         }
     }
 
@@ -154,7 +190,45 @@ $.fn.serializeObject = function (eventId) {
             url: 'http://localhost:3000/findClubTwitterHandle.html',
             data: data,
             success: function (data) {
-                validateRemainingInput(userInput,data,eventId);
+                if(data.length == 0){
+                    //the team entered has not been recognised in the database
+                    alert("Team validation has failed\nA team must be chosen from the options available");
+                    return false;
+                } else {
+                    validatePlayerInput(userInput,eventId);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log('Error: ' + error.message);
+            }
+        });
+    }
+
+    /**
+    * Sends an AJAX call that attempts to retrieve the relevant twitter handle for the entered
+    * players if they exist.
+    * @param {Object} userInput - the input that the user has entered into the form
+    * @param {Array} data - the data collected from the database, will either be empty or contain handle
+    * @param {String} eventId - the id of the button that was pressed
+    */
+    function fetchPlayersTwitterHandle(userInput, data,eventId){
+        $.ajax({
+            dataType: 'json',
+            contentType: "application/json",
+            type: 'POST',
+            url: 'http://localhost:3000/findPlayersTwitterHandle.html',
+            data: data,
+            success: function (data) {
+                var filteredPlayers = userInput.players
+                filteredPlayers = filteredPlayers.filter(function(n){ return n.trim() != ""});
+                if(data.length != filteredPlayers.length){
+                    //at least one player was not recognised in the database
+                    alert("Player validation has failed\nEach player entered must be chosen from the options available");
+                    return false;
+                } else {
+                    validateHashtagInput(userInput,eventId);
+
+                }
             },
             error: function (xhr, status, error) {
                 console.log('Error: ' + error.message);
@@ -670,7 +744,6 @@ function generateMapMarker(geoTweet, map){
 * Listens to the team input field and generates autocomplete suggestions as the user types.
 */
 $(document).ready(function() {
-    console.log("document ready");
     $.ajax({
         type: 'GET',
         url: 'http://localhost:3000/getClubs.html',
@@ -679,10 +752,70 @@ $(document).ready(function() {
             for(i=0; i<data.length; i++){
                 clubs.push(data[i].name);
             }
-            console.log(clubs);
             $( "#team" ).autocomplete({
                 source: clubs
             });
+        },
+        error: function (xhr, status, error) {
+            console.log('Error: ' + error.message);
+        }
+    });
+});
+
+
+/**
+* Listens to the players input field and generates autocomplete suggestions as the user types.
+* Players are entered as a comma separated list which has been implemented using the code from
+* the official documentation which can be found at https://jqueryui.com/autocomplete/#multiple.
+*/
+$(document).ready(function() {
+    $.ajax({
+        type: 'GET',
+        url: 'http://localhost:3000/getPlayers.html',
+        success: function (data) {
+            var players =[]
+            for(i=0; i<data.length; i++){
+                players.push(data[i].name);
+            }
+            
+            function split( val ) {
+              return val.split( /,\s*/ );
+            }
+            function extractLast( term ) {
+              return split( term ).pop();
+            }
+            $( "#players" )
+              // don't navigate away from the field on tab when selecting an item
+              .bind( "keydown", function( event ) {
+                if ( event.keyCode === $.ui.keyCode.TAB &&
+                    $( this ).autocomplete( "instance" ).menu.active ) {
+                  event.preventDefault();
+                }
+              })
+              .autocomplete({
+                minLength: 0,
+                source: function( request, response ) {
+                  // delegate back to autocomplete, but extract the last term
+                  response( $.ui.autocomplete.filter(
+                    players, extractLast( request.term ) ) );
+                },
+                focus: function() {
+                  // prevent value inserted on focus
+                  return false;
+                },
+                select: function( event, ui ) {
+                  var terms = split( this.value );
+                  // remove the current input
+                  terms.pop();
+                  // add the selected item
+                  terms.push( ui.item.value );
+                  // add placeholder to get the comma-and-space at the end
+                  terms.push( "" );
+                  this.value = terms.join( ", " );
+                  return false;
+                }
+              });
+
         },
         error: function (xhr, status, error) {
             console.log('Error: ' + error.message);
