@@ -214,6 +214,18 @@ textarea:focus, input:focus, input[type]:focus, .uneditable-input:focus {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Swirly gif generated using http://www.ajaxload.info/#preview */
+.swirly {
+    display:    none;
+    position:   fixed;
+    margin-left: 35%;
+    height:     30%;
+    width:      30%;
+    background: url('../ajax-loader.gif') 
+                50% 50% 
+                no-repeat;
+}
+
 
 
 

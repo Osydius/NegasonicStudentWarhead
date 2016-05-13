@@ -46,10 +46,24 @@ $.fn.serializeObject = function () {
 function validateInput(userInput){
 	//check that the date isn't in past
 	//convert entered string into a date
-	var parts =userInput.date[0].trim().split('/');
-	var enteredDate = new Date(parts[2],parts[1]-1,parts[0]); 
+    var dateInput = userInput.date[0].trim()
+    var parts = null;
+    var enteredDate = null;
+
+    if (dateInput.indexOf('-') > -1){
+        //date was entered using the date picker
+        parts =userInput.date[0].trim().split('-');
+        enteredDate = new Date(parts[0], parts[1]-1, parts[2]);
+        console.log(parts)
+    } else {
+        //date was entered without the date picker
+        parts =userInput.date[0].trim().split('/');
+        enteredDate = new Date(parts[2],parts[1]-1,parts[0]);
+    }
+
 	//check that date isn't in the past
 	var now = new Date();
+    console.log(enteredDate);
 	if(enteredDate < now || enteredDate == "Invalid Date"){
 		alert("You must enter a valid date that is in the future");
         return false;

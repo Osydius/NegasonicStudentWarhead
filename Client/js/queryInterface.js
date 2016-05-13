@@ -11,6 +11,7 @@
  * @param {Object} data - the terms that were entered into the form
  */
 function sendALLAjaxQuery(url, data) {
+        $('.swirly').css('display','block');
         $.ajax({
             dataType: 'json',
             contentType: "application/json",
@@ -18,9 +19,11 @@ function sendALLAjaxQuery(url, data) {
             url: url+'getAllTweets.html',
             data: data,
             success: function (data) {
+                $('.swirly').css('display','none');
                 handleServerResponse(data);
             },
             error: function (xhr, status, error) {
+                $('.swirly').css('display','none');
                 console.log('Error: ' + error.message);
                
             }
@@ -33,6 +36,7 @@ function sendALLAjaxQuery(url, data) {
  * @param {Object} data - the terms that were entered into the form
  */
 function sendANYAjaxQuery(url, data) {
+    $('.swirly').css('display','block');
     $.ajax({
         dataType: 'json',
         contentType: "application/json",
@@ -40,9 +44,11 @@ function sendANYAjaxQuery(url, data) {
         type: 'POST',
         url: url + 'getAnyTweets.html',
         success: function (data, status, xhr) {
+            $('.swirly').css('display','none');
             handleServerResponse(data);
         },
             error: function (xhr, status, error) {
+                $('.swirly').css('display','none');
             console.log('Error: ' + error.message);
         }
 });
