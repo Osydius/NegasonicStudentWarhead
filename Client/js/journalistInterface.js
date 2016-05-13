@@ -89,7 +89,10 @@ function validateTeamInput(userInput) {
 function sendDataToServer(userInput){
     //all validations have passed
     url = 'http://localhost:3000/';
-    data = JSON.stringify(userInput);
+    //data = JSON.stringify(userInput);
+    //$('#team1_id').val()
+
+    data = JSON.stringify({"date": userInput.date, "team1": $('#team1_id').val(), "team2": $('#team2_id').val()});
     console.log(data);
     $.ajax({
         dataType: 'json',
@@ -109,53 +112,53 @@ function sendDataToServer(userInput){
 }
 
 /**
-    * Sends an AJAX call that attempts to retrieve the relevant twitter handle for the entered
-    * team if it exists.
-    * @param {Object} userInput - the input that the user has entered into the form
-    * @param {Array} data - the data collected from the database, will either be empty or contain handle
-    * @param {String} eventId - the id of the button that was pressed
-    */
-    function fetchClubTwitterHandle(userInput,data){
-        $.ajax({
-            dataType: 'json',
-            contentType: "application/json",
-            type: 'POST',
-            url: 'http://localhost:3000/findClubTwitterHandle.html',
-            data: data,
-            success: function (data) {
-                if(data.length == 0){
-                    //the team entered has not been recognised in the database
-                    alert("Team validation has failed\nTeam 1 was not chosen from the options available");
-                    return false;
-                } else {
-                    //team 1 was valid so now repeat ajax for team 2
-                    team2 = JSON.stringify(userInput.team2)
-                    $.ajax({
-                        dataType: 'json',
-                        contentType: "application/json",
-                        type: 'POST',
-                        url: 'http://localhost:3000/findClubTwitterHandle.html',
-                        data: team2,
-                        success: function (team2) {
-                            if(team2.length == 0){
-                                //the team entered has not been recognised in the database
-                                alert("Team validation has failed\nTeam 2 was not chosen from the options available");
-                                return false;
-                            } else {
-                                sendDataToServer(userInput);
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.log('Error: ' + error.message);
+* Sends an AJAX call that attempts to retrieve the relevant twitter handle for the entered
+* team if it exists.
+* @param {Object} userInput - the input that the user has entered into the form
+* @param {Array} data - the data collected from the database, will either be empty or contain handle
+* @param {String} eventId - the id of the button that was pressed
+*/
+function fetchClubTwitterHandle(userInput,data){
+    $.ajax({
+        dataType: 'json',
+        contentType: "application/json",
+        type: 'POST',
+        url: 'http://localhost:3000/findClubTwitterHandle.html',
+        data: data,
+        success: function (data) {
+            if(data.length == 0){
+                //the team entered has not been recognised in the database
+                alert("Team validation has failed\nTeam 1 was not chosen from the options available");
+                return false;
+            } else {
+                //team 1 was valid so now repeat ajax for team 2
+                team2 = JSON.stringify(userInput.team2)
+                $.ajax({
+                    dataType: 'json',
+                    contentType: "application/json",
+                    type: 'POST',
+                    url: 'http://localhost:3000/findClubTwitterHandle.html',
+                    data: team2,
+                    success: function (team2) {
+                        if(team2.length == 0){
+                            //the team entered has not been recognised in the database
+                            alert("Team validation has failed\nTeam 2 was not chosen from the options available");
+                            return false;
+                        } else {
+                            sendDataToServer(userInput);
                         }
-                    });
-                }
-            },
-            error: function (xhr, status, error) {
-                console.log('Error: ' + error.message);
+                    },
+                    error: function (xhr, status, error) {
+                        console.log('Error: ' + error.message);
+                    }
+                });
             }
-        });
-    }
+        },
+        error: function (xhr, status, error) {
+            console.log('Error: ' + error.message);
+        }
+    });
+}
 
 
 
@@ -167,12 +170,13 @@ function sendDataToServer(userInput){
 /**
 * Listens to the team input fields and generates autocomplete suggestions as the user types.
 */
-$(document).ready(function() {
+/*$(document).ready(function() {
     $.ajax({
         type: 'GET',
         url: 'http://localhost:3000/getClubs.html',
         success: function (data) {
             var clubs =[]
+            console.log(data)
             for(i=0; i<data.length; i++){
                 clubs.push(data[i].name);
             }
@@ -181,6 +185,55 @@ $(document).ready(function() {
             });
             $( "#team2" ).autocomplete({
                 source: clubs
+            });
+        },
+        error: function (xhr, status, error) {
+            console.log('Error: ' + error.message);
+        }
+    });
+});
+*/
+$(document).ready(function() {
+    $.ajax({
+        type: 'GET',
+        url: 'http://localhost:3000/getClubs.html',
+        success: function (data) {
+            var clubs =[]
+            for(i=0; i<data.length; i++){
+                var club = {value: data[i].dbpediaPage, label: data[i].name}
+                clubs.push(club)
+            }
+            $( "#team1" ).autocomplete({
+                source: clubs,
+                select: function (event, ui) {
+                    event.preventDefault();
+                    $("#team1").val(ui.item.label); // display the selected text
+                    $("#team1_id").val(ui.item.value); // save selected id to hidden input
+                    return false;
+                },
+                change: function( event, ui ) {
+                    $( "#team1_id" ).val( ui.item? ui.item.value : 0 );
+                },
+                focus: function(event, ui) {
+                    event.preventDefault();
+                    $("#team1").val(ui.item.label);
+                }
+            });
+            $( "#team2" ).autocomplete({
+                source: clubs,
+                select: function (event, ui) {
+                    event.preventDefault();
+                    $("#team2").val(ui.item.label); // display the selected text
+                    $("#team2_id").val(ui.item.value); // save selected id to hidden input
+                    return false;
+                },
+                change: function( event, ui ) {
+                    $( "#team2_id" ).val( ui.item? ui.item.value : 0 );
+                },
+                focus: function(event, ui) {
+                    event.preventDefault();
+                    $("#team2").val(ui.item.label);
+                }
             });
         },
         error: function (xhr, status, error) {
