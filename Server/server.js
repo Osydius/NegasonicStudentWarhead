@@ -303,6 +303,7 @@ function getFootballPlayers(response){
 			var newPlayer = {}
 			newPlayer.name = players[i].footballPlayerName;
 			newPlayer.twitterHandle = players[i].footballPlayerTwitterHandle;
+			newPlayer.dbpediaPage = players[i].footballPlayerDBPediaPage;
 			returnPlayers[i] = newPlayer;
 		}
 
@@ -325,6 +326,7 @@ function getFootballClubs(response){
 			var newClub = {}
 			newClub.name = clubs[i].footballClubName;
 			newClub.twitterHandle = clubs[i].footballClubTwitterHandle;
+			newClub.dbpediaPage = clubs[i].footballClubDBPediaPage;
 			returnClubs[i] = newClub;
 		}
 
@@ -780,18 +782,22 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 }
 
 function getJournalistBrief(clientData, response){
-	DBPediaClient.query(sparqlFootballClubQuery()).execute(function(error, results){
-		var returnResults
+	queryDate = clientData["date"];
+	queryTeam1 = clientData["team1"];
+	queryTeam2 = clientData["team2"];
+	var returnResults
+	DBPediaClient.query(sparqlFootballClubQuery(queryTeam1)).execute(function(error, results){
+		var team1ReturnResults
 		if(results.results.bindings.length > 0){
 			//There are results
 			allResults = results.results.bindings;
-			returnResults = {};
-			returnResults["clubAbstract"] = allResults[0].abstract;
-			returnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
-			returnResults["clubGroundName"] = allResults[0]["callret-7"];
-			returnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
-			returnResults["clubManagerName"] = allResults[0]["callret-5"];
-			returnResults["clubGroundThumbnail"] = allResults[0].managerThumbnail;
+			team1ReturnResults = {};
+			team1ReturnResults["clubAbstract"] = allResults[0].abstract;
+			team1ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
+			team1ReturnResults["clubGroundName"] = allResults[0]["callret-7"];
+			team1ReturnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
+			team1ReturnResults["clubManagerName"] = allResults[0]["callret-5"];
+			team1ReturnResults["clubGroundThumbnail"] = allResults[0].managerThumbnail;
 
 			var returnPlayers = [];
 			for(var i=0;i<allResults.length;i++){
@@ -804,13 +810,47 @@ function getJournalistBrief(clientData, response){
 				returnPlayers.push(newPlayer);
 			}
 
-			returnResults["players"] = returnPlayers;
+			team1ReturnResults["players"] = returnPlayers;
 		} else {
-			returnResults = null;
+			team1ReturnResults = null;
 		}
-		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-		response.end(JSON.stringify(returnResults));
+		returnResults["team1"] = team1ReturnResults;
+
+		DBPediaClient.query(sparqlFootballClubQuery(queryTeam2)).execute(function(error, results){
+			var team2ReturnResults
+			if(results.results.bindings.length > 0){
+				//There are results
+				allResults = results.results.bindings;
+				team2ReturnResults = {};
+				team2ReturnResults["clubAbstract"] = allResults[0].abstract;
+				team2ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
+				team2ReturnResults["clubGroundName"] = allResults[0]["callret-7"];
+				team2ReturnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
+				team2ReturnResults["clubManagerName"] = allResults[0]["callret-5"];
+				team2ReturnResults["clubGroundThumbnail"] = allResults[0].managerThumbnail;
+
+				var returnPlayers = [];
+				for(var i=0;i<allResults.length;i++){
+					var newPlayer = {};
+					newPlayer["playerName"] = allResults[i]["callret-1"];
+					newPlayer["playerDOB"] = allResults[i].playerDateOfBirth;
+					newPlayer["playerPosition"] = allResults[i].playerPositionLabel;
+					newPlayer["playerThumbnail"] = allResults[i].playerThumbnail;
+
+					returnPlayers.push(newPlayer);
+				}
+
+				team2ReturnResults["players"] = returnPlayers;
+			} else {
+				team2ReturnResults = null;
+			}
+			returnResults["team2"] = team2ReturnResults;
+			response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+			response.end(JSON.stringify(returnResults));
+		});
 	});
+
+
 }
 
 /*
@@ -832,23 +872,24 @@ function gracefulShutdown(){
 	}, 1*1000);
 }
 
-function sparqlFootballClubQuery(){
+function sparqlFootballClubQuery(teamDBPediaPage){
 	sparqlQuery = "SELECT ?abstract MIN((?playerName) as ?playerName) ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel MIN((?managerName) as ?managerName) ?managerThumbnail MIN((?groundName) as ?groundName) ?groundAbstract ?groundThumbnail"
 	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
-	sparqlQuery = sparqlQuery + " <http://dbpedia.org/resource/Manchester_United_F.C.> dbo:abstract ?abstract FILTER langMatches(lang(?abstract),'en')."
-	sparqlQuery = sparqlQuery + " <http://dbpedia.org/resource/Manchester_United_F.C.> dbp:name ?players."
+	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbo:abstract ?abstract FILTER langMatches(lang(?abstract),'en')."
+	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:name ?players."
 	sparqlQuery = sparqlQuery + " ?players dbp:name ?playerName FILTER langMatches(lang(?playerPositionLabel),'en')."
 	sparqlQuery = sparqlQuery + " ?players dbp:position ?playerPosition."
 	sparqlQuery = sparqlQuery + " ?players dbp:dateOfBirth ?playerDateOfBirth."
 	sparqlQuery = sparqlQuery + " ?players dbo:thumbnail ?playerThumbnail."
+
 	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
 
-	sparqlQuery = sparqlQuery + " <http://dbpedia.org/resource/Manchester_United_F.C.> dbp:manager ?manager."
+	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:manager ?manager."
 	sparqlQuery = sparqlQuery + " ?manager dbp:name ?managerName FILTER langMatches(lang(?managerName),'en')."
 	sparqlQuery = sparqlQuery + " ?manager dbo:thumbnail ?managerThumbnail."
 
-	sparqlQuery = sparqlQuery + " <http://dbpedia.org/resource/Manchester_United_F.C.> dbp:ground ?ground."
+	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:ground ?ground."
 	sparqlQuery = sparqlQuery + " ?ground dbp:name ?groundName FILTER langMatches(lang(?groundName),'en')."
 	sparqlQuery = sparqlQuery + " ?ground dbo:abstract ?groundAbstract FILTER langMatches(lang(?groundAbstract),'en')."
 	sparqlQuery = sparqlQuery + " ?ground dbo:thumbnail ?groundThumbnail."
