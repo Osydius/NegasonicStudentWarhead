@@ -1,0 +1,42 @@
+--- This query gets information about a specific football club ---
+select ?abstract ?playerName ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel ?managerName ?managerThumbnail ?groundName ?groundAbstract ?groundThumbnail where {
+  <http://dbpedia.org/resource/Manchester_United_F.C.> dbo:abstract ?abstract
+  FILTER langMatches(lang(?abstract),'en').
+
+  <http://dbpedia.org/resource/Manchester_United_F.C.> dbp:name ?players.
+
+  ?players dbp:name ?playerName
+  FILTER langMatches(lang(?playerPositionLabel),'en').
+
+  ?players dbp:position ?playerPosition;
+    dbp:dateOfBirth ?playerDateOfBirth;
+    dbo:thumbnail ?playerThumbnail.
+
+  ?playerPosition rdfs:label ?playerPositionLabel
+  FILTER langMatches(lang(?playerPositionLabel),'en').
+
+  <http://dbpedia.org/resource/Manchester_United_F.C.> dbp:manager ?manager.
+  ?manager dbp:name ?managerName
+  FILTER langMatches(lang(?managerName),'en').
+  ?manager dbo:thumbnail ?managerThumbnail
+
+  <http://dbpedia.org/resource/Manchester_United_F.C.> dbp:ground ?ground.
+  ?ground dbp:name ?groundName
+  FILTER langMatches(lang(?groundName),'en').
+  ?ground dbo:abstract ?groundAbstract
+  FILTER langMatches(lang(?groundAbstract),'en').
+  ?ground dbo:thumbnail ?groundThumbnail
+}
+
+--- This query gets information for a specific player, need to add career history ---
+SELECT ?playerName ?playerPosition ?playerDOB ?playerThumbnail ?playerPositionLabel  WHERE {
+  <http://dbpedia.org/resource/David_de_Gea> dbp:name ?playerName;
+    dbo:position ?playerPosition;
+    dbp:dateOfBirth ?playerDOB;
+    dbo:thumbnail ?playerThumbnail.
+
+  ?playerPosition rdfs:label ?playerPositionLabel
+  FILTER langMatches(lang(?playerPositionLabel),'en').
+
+  <http://dbpedia.org/resource/David_de_Gea> dbo:abstract ?playerAbstract
+}
