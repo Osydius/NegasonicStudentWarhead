@@ -16,12 +16,17 @@ var url = require('url');
 var querystring = require('querystring');
 var Twit = require('twit');
 var mysql = require('mysql');
+var SparqlClient = require('sparql-client')
 var config = require('./config.js');
 
-//Initialise twitter and mysql connections
+//Initialise twitter and mysql and DBPedia connections
 var twitterClient = new Twit(config.twitter);
+
 var mySqlConnection = mysql.createConnection(config.mysql);
 mySqlConnection.connect();
+
+var DBPediaEndpoint = 'http://dbpedia.org/sparql';
+var DBPediaClient = new SparqlClient(DBPediaEndpoint);
 
 //Initialise server information
 var fileServer = new (static.Server)();
@@ -69,6 +74,10 @@ app.post('/findClubTwitterHandle.html', function(request, response){
 
 app.post('/findPlayersTwitterHandle.html', function(request, response){
 	findPlayersTwitterHandle(request.body, response);
+});
+
+app.post('/journalistBrief.html', function(request, response){
+	getJournalistBrief(request.body, response);
 });
 
 /*
@@ -240,7 +249,6 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets, data
 							}
 						}
 						//The following log returns all the tweets found so that they can be recorded.
-						console.log(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 		    			response.end(returnedTweets);
@@ -268,7 +276,6 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets, data
 							}
 						}
 						//The following log returns all the tweets found so that they can be recorded.
-						console.log(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 		    			response.end(returnedTweets);
@@ -454,8 +461,14 @@ function newTweet(tweetInfo, userOfTweetId){
 					newTwitterHashtags(tweetInfo, newInsertedTweetId);
 				}
 
-				if(tweetInfo.entities.urls > 0){
+				if(tweetInfo.entities.urls.length > 0){
 					newTwitterUrls(tweetInfo, newInsertedTweetId);
+				}
+
+				if('media' in tweetInfo.entities){
+					if(tweetInfo.entities.media.length > 0){
+						newTwitterMedia(tweetInfo, newInsertedTweetId);
+					}
 				}
 			});
 		} else {
@@ -468,8 +481,14 @@ function newTweet(tweetInfo, userOfTweetId){
 				newTwitterHashtags(tweetInfo, result[0].tweetId);
 			}
 
-			if(tweetInfo.entities.urls > 0){
+			if(tweetInfo.entities.urls.length > 0){
 				newTwitterUrls(tweetInfo, result[0].tweetId);
+			}
+
+			if('media' in tweetInfo.entities){
+				if(tweetInfo.entities.media.length > 0){
+					newTwitterMedia(tweetInfo, result[0].tweetId);
+				}
 			}
 		}
 	});
@@ -572,7 +591,7 @@ function newTweetTwitterHashtag(tweetId, hashtagId, startPoint, endPoint){
 function newTwitterUrls(tweetInfo, tweetId){
 	for(var i=0; i< tweetInfo.entities.urls.length;i++){
 		var currentUrl = tweetInfo.entities.urls[i];
-		mySqlConnection.query("SELECT * FROM twitterurls WHERE url = ?", [currentUrl.url], function(error, result){
+		mySqlConnection.query("SELECT * FROM twitterurls WHERE twitterUrlUrl = ?", [currentUrl.url], function(error, result){
 			if(error != null){
 				console.log(error)
 			}
@@ -601,8 +620,38 @@ function newTwitterUrls(tweetInfo, tweetId){
 * @param {integer} endPoint - The end position where the url is used.
 */
 function newTweetTwitterUrl(tweetId, urlId, startPoint, endPoint){
-	var newTweetTwitterUrlInfo = {tweetTwitterUrlTweetId: tweetId, tweetTwitterUrlTwitterUrlId: hashtagId, tweetTwitterUrlStartPoint: startPoint, tweetTwitterUrlEndPoint: endPoint};
+	var newTweetTwitterUrlInfo = {tweetTwitterUrlTweetId: tweetId, tweetTwitterUrlTwitterUrlId: urlId, tweetTwitterUrlStartPoint: startPoint, tweetTwitterUrlEndPoint: endPoint};
 	mySqlConnection.query("INSERT INTO tweettwitterurls SET ?", newTweetTwitterUrlInfo, function(error, result){
+		//TODO: Check for any errors
+	});
+}
+
+function newTwitterMedia(tweetInfo, tweetId){
+	for(var i=0; i <tweetInfo.entities.media.length; i++){
+		var currentMedia = tweetInfo.entities.media[i];
+		mySqlConnection.query("SELECT * FROM twittermedias WHERE twitterMediaUrl = ?", [currentMedia.media_url], function(error, result){
+			if(error != null){
+				console.log(error)
+			}
+			if(result.length == 0){
+				newMediaInfo = {twitterMediaUrl: currentMedia.media_url, twitterMediaMediaId: currentMedia.id_str, twitterMediaType: currentMedia.type};
+				mySqlConnection.query("INSERT INTO twittermedias SET ?", newMediaInfo, function(error, result){
+					if(error != null){
+						console.log(error)
+					}
+					newMediaId = result.insertId;
+					newTweetTwitterMedia(tweetId, newMediaId, currentMedia.indices[0], currentMedia.indices[1]);
+				});
+			} else {
+				newTweetTwitterMedia(tweetId, result[0].twitterMediaId, currentMedia.indices[0], currentMedia.indices[1]);
+			}
+		});
+	}
+}
+
+function newTweetTwitterMedia(tweetId, mediaId, startPoint, endPoint){
+	var newTweetTwitterMediaInfo = {tweetTwitterMediaTweetId: tweetId, tweetTwitterMediaTwitterMediaId: mediaId, tweetTwitterMediaStartPoint: startPoint, tweetTwitterMediaEndPoint: endPoint};
+	mySqlConnection.query("INSERT INTO tweettwittermedias SET ?", newTweetTwitterMediaInfo, function(error, result){
 		//TODO: Check for any errors
 	});
 }
@@ -728,6 +777,12 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 	});
 }
 
+function getJournalistBrief(clientData, response){
+	client.query(sparqlFootballClubQuery).execute(function(error, results){
+		console.log(results);
+	});
+}
+
 /*
 * Intended to be used when shutting down the server and to close any connections that might still exist.
 * After an allotted time, the server timesouts and forces the shutdown of the server.
@@ -745,4 +800,39 @@ function gracefulShutdown(){
 	   console.error("Could not close connections in time, forcefully shutting down");
 	   process.exit()
 	}, 1*1000);
+}
+
+function sparqlFootballClubQuery(){
+	sparqlQuery = "SELECT ?abstract ?playerName ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel ?managerName ?managerThumbnail ?groundName ?groundAbstract ?groundThumbnail WHERE {"
+
+	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/Manchester_United_F.C.> dbo:abstract ?abstract FILTER langMatches(lang(?abstract),'en')."
+	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/Manchester_United_F.C.> dbp:name ?players."
+	sparqlQuery = sparqlQuery + "?players dbp:name ?playerName ?players dbp:position ?playerPosition; dbp:dateOfBirth ?playerDateOfBirth; dbo:thumbnail ?playerThumbnail."
+	sparqlQuery = sparqlQuery + "?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
+
+	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/Manchester_United_F.C.> dbp:manager ?manager."
+	sparqlQuery = sparqlQuery + "?manager dbp:name ?managerName FILTER langMatches(lang(?managerName),'en')."
+	sparqlQuery = sparqlQuery + "?manager dbo:thumbnail ?managerThumbnail."
+
+	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/Manchester_United_F.C.> dbp:ground ?ground."
+	sparqlQuery = sparqlQuery + "?ground dbp:name ?groundName FILTER langMatches(lang(?groundName),'en')."
+	sparqlQuery = sparqlQuery + "?ground dbo:abstract ?groundAbstract FILTER langMatches(lang(?groundAbstract),'en')."
+	sparqlQuery = sparqlQuery + "?ground dbo:thumbnail ?groundThumbnail."
+
+	sparqlQuery = sparqlQuery + " }"
+	return sparqlQuery
+}
+
+function sparqlFootballPlayerQuery(){
+	sparqlQuery = "SELECT ?playerName ?playerPosition ?playerDOB ?playerThumbnail ?playerPositionLabel  WHERE {"
+
+	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/David_de_Gea> dbp:name ?playerName;"
+	sparqlQuery = sparqlQuery + "dbo:position ?playerPosition; dbp:dateOfBirth ?playerDOB; dbo:thumbnail ?playerThumbnail."
+
+	sparqlQuery = sparqlQuery + "?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
+
+	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/David_de_Gea> dbo:abstract ?playerAbstract"
+
+	sparqlQuery = sparqlQuery + " }"
+	return sparqlQuery
 }

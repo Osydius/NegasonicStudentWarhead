@@ -34,9 +34,9 @@ $.fn.serializeObject = function () {
                 }
                 o[this.name].push(this.value || '');
             } else {
-                
+
                 o[this.name] = [this.value] || [''];
-                
+
             }
         });
         validateInput(o);
@@ -47,7 +47,7 @@ function validateInput(userInput){
 	//check that the date isn't in past
 	//convert entered string into a date
 	var parts =userInput.date[0].trim().split('/');
-	var enteredDate = new Date(parts[2],parts[1]-1,parts[0]); 
+	var enteredDate = new Date(parts[2],parts[1]-1,parts[0]);
 	//check that date isn't in the past
 	var now = new Date();
 	if(enteredDate < now || enteredDate == "Invalid Date"){
@@ -75,7 +75,20 @@ function validateTeamInput(userInput) {
 
 function sendDataToServer(userInput){
     //all validations have passed
-    alert("send would have totes happended")
+    $.ajax({
+        dataType: 'json',
+        contentType: "application/json",
+        type: 'POST',
+        url: url+'journalistBrief.html',
+        data: data,
+        success: function (data) {
+            handleServerResponse(data);
+        },
+        error: function (xhr, status, error) {
+            console.log('Error: ' + error.message);
+
+        }
+    });
     return false;
 }
 
