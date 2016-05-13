@@ -88,6 +88,9 @@ function validateTeamInput(userInput) {
 
 function sendDataToServer(userInput){
     //all validations have passed
+    url = 'http://localhost:3000/';
+    data = JSON.stringify(userInput);
+    console.log(data);
     $.ajax({
         dataType: 'json',
         contentType: "application/json",
@@ -95,7 +98,7 @@ function sendDataToServer(userInput){
         url: url+'journalistBrief.html',
         data: data,
         success: function (data) {
-            handleServerResponse(data);
+            console.log(data)
         },
         error: function (xhr, status, error) {
             console.log('Error: ' + error.message);

@@ -11,12 +11,14 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var cors = require('cors');
 var static = require('node-static');
-var util = require('util');
-var url = require('url');
-var querystring = require('querystring');
+var loadash = require('lodash');
 var Twit = require('twit');
 var mysql = require('mysql');
 var SparqlClient = require('sparql-client')
+var util = require('util');
+var url = require('url');
+var querystring = require('querystring');
+
 var config = require('./config.js');
 
 //Initialise twitter and mysql and DBPedia connections
@@ -778,8 +780,36 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 }
 
 function getJournalistBrief(clientData, response){
-	client.query(sparqlFootballClubQuery).execute(function(error, results){
-		console.log(results);
+	DBPediaClient.query(sparqlFootballClubQuery()).execute(function(error, results){
+		var returnResults
+		if(results.results.bindings.length > 0){
+			//There are results
+			allResults = results.results.bindings;
+			returnResults = {};
+			returnResults["clubAbstract"] = allResults[0].abstract;
+			returnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
+			returnResults["clubGroundName"] = allResults[0]["callret-7"];
+			returnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
+			returnResults["clubManagerName"] = allResults[0]["callret-5"];
+			returnResults["clubGroundThumbnail"] = allResults[0].managerThumbnail;
+
+			var returnPlayers = [];
+			for(var i=0;i<allResults.length;i++){
+				var newPlayer = {};
+				newPlayer["playerName"] = allResults[i]["callret-1"];
+				newPlayer["playerDOB"] = allResults[i].playerDateOfBirth;
+				newPlayer["playerPosition"] = allResults[i].playerPositionLabel;
+				newPlayer["playerThumbnail"] = allResults[i].playerThumbnail;
+
+				returnPlayers.push(newPlayer);
+			}
+
+			returnResults["players"] = returnPlayers;
+		} else {
+			returnResults = null;
+		}
+		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+		response.end(JSON.stringify(returnResults));
 	});
 }
 
@@ -803,21 +833,25 @@ function gracefulShutdown(){
 }
 
 function sparqlFootballClubQuery(){
-	sparqlQuery = "SELECT ?abstract ?playerName ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel ?managerName ?managerThumbnail ?groundName ?groundAbstract ?groundThumbnail WHERE {"
+	sparqlQuery = "SELECT ?abstract MIN((?playerName) as ?playerName) ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel MIN((?managerName) as ?managerName) ?managerThumbnail MIN((?groundName) as ?groundName) ?groundAbstract ?groundThumbnail"
+	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
-	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/Manchester_United_F.C.> dbo:abstract ?abstract FILTER langMatches(lang(?abstract),'en')."
-	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/Manchester_United_F.C.> dbp:name ?players."
-	sparqlQuery = sparqlQuery + "?players dbp:name ?playerName ?players dbp:position ?playerPosition; dbp:dateOfBirth ?playerDateOfBirth; dbo:thumbnail ?playerThumbnail."
-	sparqlQuery = sparqlQuery + "?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
+	sparqlQuery = sparqlQuery + " <http://dbpedia.org/resource/Manchester_United_F.C.> dbo:abstract ?abstract FILTER langMatches(lang(?abstract),'en')."
+	sparqlQuery = sparqlQuery + " <http://dbpedia.org/resource/Manchester_United_F.C.> dbp:name ?players."
+	sparqlQuery = sparqlQuery + " ?players dbp:name ?playerName FILTER langMatches(lang(?playerPositionLabel),'en')."
+	sparqlQuery = sparqlQuery + " ?players dbp:position ?playerPosition."
+	sparqlQuery = sparqlQuery + " ?players dbp:dateOfBirth ?playerDateOfBirth."
+	sparqlQuery = sparqlQuery + " ?players dbo:thumbnail ?playerThumbnail."
+	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
 
-	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/Manchester_United_F.C.> dbp:manager ?manager."
-	sparqlQuery = sparqlQuery + "?manager dbp:name ?managerName FILTER langMatches(lang(?managerName),'en')."
-	sparqlQuery = sparqlQuery + "?manager dbo:thumbnail ?managerThumbnail."
+	sparqlQuery = sparqlQuery + " <http://dbpedia.org/resource/Manchester_United_F.C.> dbp:manager ?manager."
+	sparqlQuery = sparqlQuery + " ?manager dbp:name ?managerName FILTER langMatches(lang(?managerName),'en')."
+	sparqlQuery = sparqlQuery + " ?manager dbo:thumbnail ?managerThumbnail."
 
-	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/Manchester_United_F.C.> dbp:ground ?ground."
-	sparqlQuery = sparqlQuery + "?ground dbp:name ?groundName FILTER langMatches(lang(?groundName),'en')."
-	sparqlQuery = sparqlQuery + "?ground dbo:abstract ?groundAbstract FILTER langMatches(lang(?groundAbstract),'en')."
-	sparqlQuery = sparqlQuery + "?ground dbo:thumbnail ?groundThumbnail."
+	sparqlQuery = sparqlQuery + " <http://dbpedia.org/resource/Manchester_United_F.C.> dbp:ground ?ground."
+	sparqlQuery = sparqlQuery + " ?ground dbp:name ?groundName FILTER langMatches(lang(?groundName),'en')."
+	sparqlQuery = sparqlQuery + " ?ground dbo:abstract ?groundAbstract FILTER langMatches(lang(?groundAbstract),'en')."
+	sparqlQuery = sparqlQuery + " ?ground dbo:thumbnail ?groundThumbnail."
 
 	sparqlQuery = sparqlQuery + " }"
 	return sparqlQuery
