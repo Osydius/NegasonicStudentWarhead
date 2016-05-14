@@ -782,16 +782,15 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 }
 
 function getJournalistBrief(clientData, response){
-	queryDate = clientData["date"];
+	queryDate = clientData["date"][0];
 	queryTeam1 = clientData["team1"];
 	queryTeam2 = clientData["team2"];
-	var returnResults
+	var returnResults = {}
 	DBPediaClient.query(sparqlFootballClubQuery(queryTeam1)).execute(function(error, results){
-		var team1ReturnResults
+		var team1ReturnResults = {}
 		if(results.results.bindings.length > 0){
 			//There are results
 			allResults = results.results.bindings;
-			team1ReturnResults = {};
 			team1ReturnResults["clubAbstract"] = allResults[0].abstract;
 			team1ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
 			team1ReturnResults["clubGroundName"] = allResults[0]["callret-7"];
@@ -817,11 +816,10 @@ function getJournalistBrief(clientData, response){
 		returnResults["team1"] = team1ReturnResults;
 
 		DBPediaClient.query(sparqlFootballClubQuery(queryTeam2)).execute(function(error, results){
-			var team2ReturnResults
+			var team2ReturnResults = {}
 			if(results.results.bindings.length > 0){
 				//There are results
 				allResults = results.results.bindings;
-				team2ReturnResults = {};
 				team2ReturnResults["clubAbstract"] = allResults[0].abstract;
 				team2ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
 				team2ReturnResults["clubGroundName"] = allResults[0]["callret-7"];
