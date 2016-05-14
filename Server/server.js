@@ -791,11 +791,12 @@ function getJournalistBrief(clientData, response){
 		if(results.results.bindings.length > 0){
 			//There are results
 			allResults = results.results.bindings;
+			team1ReturnResults["clubName"] = allResults[0]["callret-0"];
 			team1ReturnResults["clubAbstract"] = allResults[0].abstract;
 			team1ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
-			team1ReturnResults["clubGroundName"] = allResults[0]["callret-7"];
+			team1ReturnResults["clubGroundName"] = allResults[0]["callret-8"];
 			team1ReturnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
-			team1ReturnResults["clubManagerName"] = allResults[0]["callret-5"];
+			team1ReturnResults["clubManagerName"] = allResults[0]["callret-6"];
 			team1ReturnResults["clubGroundThumbnail"] = allResults[0].managerThumbnail;
 
 			var returnPlayers = [];
@@ -820,11 +821,12 @@ function getJournalistBrief(clientData, response){
 			if(results.results.bindings.length > 0){
 				//There are results
 				allResults = results.results.bindings;
+				team2ReturnResults["clubName"] = allResults[0]["callret-0"];
 				team2ReturnResults["clubAbstract"] = allResults[0].abstract;
 				team2ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
-				team2ReturnResults["clubGroundName"] = allResults[0]["callret-7"];
+				team2ReturnResults["clubGroundName"] = allResults[0]["callret-8"];
 				team2ReturnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
-				team2ReturnResults["clubManagerName"] = allResults[0]["callret-5"];
+				team2ReturnResults["clubManagerName"] = allResults[0]["callret-6"];
 				team2ReturnResults["clubGroundThumbnail"] = allResults[0].managerThumbnail;
 
 				var returnPlayers = [];
@@ -871,14 +873,15 @@ function gracefulShutdown(){
 }
 
 function sparqlFootballClubQuery(teamDBPediaPage){
-	sparqlQuery = "SELECT ?abstract MIN((?playerName) as ?playerName) ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel MIN((?managerName) as ?managerName) ?managerThumbnail MIN((?groundName) as ?groundName) ?groundAbstract ?groundThumbnail"
+	sparqlQuery = "SELECT MIN((??clubName) as ?clubName) ?abstract MIN((?playerName) as ?playerName) ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel MIN((?managerName) as ?managerName) ?managerThumbnail MIN((?groundName) as ?groundName) ?groundAbstract ?groundThumbnail"
 	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
+	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> db:clubname ?clubName FILTER langMatches(lang(?abstract),'en')."
 	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbo:abstract ?abstract FILTER langMatches(lang(?abstract),'en')."
 	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:name ?players."
 	sparqlQuery = sparqlQuery + " ?players dbp:name ?playerName FILTER langMatches(lang(?playerPositionLabel),'en')."
 	sparqlQuery = sparqlQuery + " ?players dbp:position ?playerPosition."
-	sparqlQuery = sparqlQuery + " ?players dbp:dateOfBirth ?playerDateOfBirth."
+	sparqlQuery = sparqlQuery + " ?players dbo:birthDate ?playerDateOfBirth."
 	sparqlQuery = sparqlQuery + " ?players dbo:thumbnail ?playerThumbnail."
 
 	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
