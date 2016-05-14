@@ -873,10 +873,10 @@ function gracefulShutdown(){
 }
 
 function sparqlFootballClubQuery(teamDBPediaPage){
-	sparqlQuery = "SELECT MIN((??clubName) as ?clubName) ?abstract MIN((?playerName) as ?playerName) ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel MIN((?managerName) as ?managerName) ?managerThumbnail MIN((?groundName) as ?groundName) ?groundAbstract ?groundThumbnail"
+	sparqlQuery = "SELECT MIN((?clubName) as ?clubName) ?abstract MIN((?playerName) as ?playerName) ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel MIN((?managerName) as ?managerName) ?managerThumbnail MIN((?groundName) as ?groundName) ?groundAbstract ?groundThumbnail"
 	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
-	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> db:clubname ?clubName FILTER langMatches(lang(?abstract),'en')."
+	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:clubname ?clubName FILTER langMatches(lang(?abstract),'en')."
 	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbo:abstract ?abstract FILTER langMatches(lang(?abstract),'en')."
 	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:name ?players."
 	sparqlQuery = sparqlQuery + " ?players dbp:name ?playerName FILTER langMatches(lang(?playerPositionLabel),'en')."

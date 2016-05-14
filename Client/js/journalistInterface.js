@@ -13,6 +13,7 @@ generateBriefing.onclick = buttonClick;
 * that triggered the call and hands control over to serializeObject()
 */
 function buttonClick() {
+    
     var form = $('#generate_briefing_form');
     JSON.stringify($('form').serializeObject());
 
@@ -88,6 +89,7 @@ function validateTeamInput(userInput) {
 
 function sendDataToServer(userInput){
     //all validations have passed
+    $('.swirly').css('display','block');
     url = 'http://localhost:3000/';
     //data = JSON.stringify(userInput);
     //$('#team1_id').val()
@@ -101,9 +103,11 @@ function sendDataToServer(userInput){
         url: url+'journalistBrief.html',
         data: data,
         success: function (data) {
-            console.log(data)
+            $('.swirly').css('display','none');
+            handleResponseFromServer(data);
         },
         error: function (xhr, status, error) {
+            $('.swirly').css('display','none');
             console.log('Error: ' + error.message);
 
         }
@@ -166,6 +170,130 @@ function fetchClubTwitterHandle(userInput,data){
 
 
 // Section 2: Handle the response that is sent back from the server to get stuff for display ---------------------------------------------------------------------------------------------------
+
+function handleResponseFromServer(data){
+    //for each team
+    //name
+    //description
+    //players slider
+    //manager
+    //stadium
+
+    for(var key in data){
+        var team = data[key]
+        console.log(key)
+        console.log(team)
+
+        var teamContainer = document.createElement("div");
+        var teamName = document.createElement("p");
+        var abstractTitle = document.createElement("p");
+        var abstractText = document.createElement("p");
+        var playersTitle = document.createElement("p");
+        var playersSlider = document.createElement("div");
+        var managerTitle = document.createElement("p");
+        var managerImg = document.createElement("img");
+        var managerText = document.createElement("p");
+        var stadiumTitle = document.createElement("p");
+        var stadiumName = document.createElement("p");
+        var stadiumImg = document.createElement("img");
+        var stadiumText = document.createElement("p");
+
+        $('#teams_displays').append(teamContainer);
+        teamContainer.appendChild(teamName);
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(document.createElement("br"));
+
+        teamContainer.appendChild(abstractTitle);
+        teamContainer.appendChild(document.createElement("br"));
+
+        teamContainer.appendChild(abstractText);
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(document.createElement("br"));
+
+        teamContainer.appendChild(playersTitle);
+        teamContainer.appendChild(document.createElement("br"));
+
+        teamContainer.appendChild(playersSlider);
+        teamContainer.appendChild(document.createElement("br"));
+
+        $(teamName).html(team.clubName.value);
+        $(teamName).css('font-size','180%');
+        $(abstractTitle).html('Description:');
+        abstractTitle.className = "subheading";
+        $(abstractText).html(team.clubAbstract.value);
+        $(playersTitle).html('Players:');
+        playersTitle.className = "subheading";
+        playersSlider.className ='dark-panel';
+
+        for(var i=0; i<team.players.length; i++){
+            //create player tile
+            //put info in tile
+            //append to slider
+
+            var playerTile = document.createElement("div");
+            var playerImg = document.createElement("img");
+            var playerName = document.createElement("p");
+            var playerPos = document.createElement("p");
+            var playerDOB = document.createElement("p");
+
+            playersSlider.appendChild(playerTile);
+            playerTile.appendChild(playerImg);
+            playerTile.appendChild(document.createElement("br"));
+            playerTile.appendChild(playerName);
+            playerTile.appendChild(document.createElement("br"));
+            playerTile.appendChild(playerPos);
+            playerTile.appendChild(document.createElement("br"));
+            playerTile.appendChild(playerDOB);
+
+            playerTile.className = "playertile";
+            $(playerImg).attr('src', team.players[i].playerThumbnail.value);
+            playerImg.className = "playerImg";
+            $(playerName).html('Player name');
+            $(playerPos).html(team.players[i].playerPosition.value);
+            $(playerDOB).html(team.players[i].playerDOB.value);
+        }
+
+        teamContainer.appendChild(managerTitle);
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(managerImg);
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(managerText);
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(document.createElement("br"));
+
+        teamContainer.appendChild(stadiumTitle);
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(stadiumName);
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(stadiumImg);
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(stadiumText);
+        teamContainer.appendChild(document.createElement("br"));
+
+        $(managerTitle).html('Manager:');
+        //$(managerImg).attr('src',)
+        managerTitle.className = "subheading";
+        $(managerText).html(team.clubManagerName.value);
+
+        $(stadiumTitle).html('Stadium:');
+        stadiumTitle.className = "subheading";
+        $(stadiumName).html(team.clubGroundName.value);
+        $(stadiumImg).attr('src', team.clubGroundThumbnail.value);
+        $(stadiumImg).css('height','200px');
+        $(stadiumText).html(team.clubGroundAbstract.value);
+
+
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(document.createElement("br"));
+
+
+        $('#teams_displays').css("display", "block");
+    }
+
+
+}
+
+
 // Section 3: JQuery Autocomplete plugin -----------------------------------------------------------------------------------------------------
 /**
 * Listens to the team input fields and generates autocomplete suggestions as the user types.
