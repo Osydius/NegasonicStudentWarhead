@@ -190,7 +190,13 @@ function handleResponseFromServer(data){
         var abstractText = document.createElement("p");
         var playersTitle = document.createElement("p");
         var playersSlider = document.createElement("div");
+        var managerContainer = document.createElement("div");
+        var managerTable = document.createElement("table");
+        var managerRow = document.createElement("tr");
+        var managerColumn1 = document.createElement("td");
+        var managerColumn2 = document.createElement("td");
         var managerTitle = document.createElement("p");
+        var managerName = document.createElement("p");
         var managerImg = document.createElement("img");
         var managerText = document.createElement("p");
         var stadiumContainer = document.createElement("div");
@@ -255,23 +261,33 @@ function handleResponseFromServer(data){
             playerTile.className = "playertile";
             $(playerImg).attr('src', team.players[i].playerThumbnail.value);
             playerImg.className = "playerImg";
-            $(playerName).html('Player name');
+            $(playerName).html(team.players[i].playerName.value);
             $(playerPos).html(team.players[i].playerPosition.value);
             $(playerDOB).html(team.players[i].playerDOB.value);
         }
 
-        teamContainer.appendChild(managerTitle);
-        teamContainer.appendChild(document.createElement("br"));
-        teamContainer.appendChild(managerText);
-        teamContainer.appendChild(document.createElement("br"));
-        teamContainer.appendChild(managerImg);
+
+        teamContainer.appendChild(managerContainer);
+        managerContainer.appendChild(managerTitle);
+        managerContainer.appendChild(document.createElement("br"));
+        managerContainer.appendChild(managerTable);
+        managerTable.appendChild(managerRow);
+        managerRow.appendChild(managerColumn1);
+        managerRow.appendChild(managerColumn2);
+
+        managerColumn1.appendChild(managerName);
+        managerColumn1.appendChild(document.createElement("br"));
+        managerColumn1.appendChild(managerImg);
+        managerColumn1.appendChild(document.createElement("br"));
+        managerColumn2.appendChild(managerText);
+        managerColumn2.appendChild(document.createElement("br"));
+
         teamContainer.appendChild(document.createElement("br"));
         teamContainer.appendChild(document.createElement("br"));
 
         teamContainer.appendChild(stadiumContainer);
         stadiumContainer.appendChild(stadiumTitle);
         stadiumContainer.appendChild(document.createElement("br"));
-
         stadiumContainer.appendChild(stadiumTable);
         stadiumTable.appendChild(stadiumRow);
         stadiumRow.appendChild(stadiumColumn1);
@@ -285,10 +301,14 @@ function handleResponseFromServer(data){
         stadiumColumn2.appendChild(document.createElement("br"));
 
         $(managerTitle).html('Manager:');
-        $(managerText).html(team.clubManagerName.value);
+        managerTitle.className = "subheading";
+        $(managerColumn1).css('width','30%');
+        $(managerName).html(team.clubManagerName.value);
         $(managerImg).attr('src', team.clubManagerThumbnail.value)
         $(managerImg).css('height','200px');
-        managerTitle.className = "subheading";
+        $(managerImg).css('display', 'block-inline');
+        $(managerText).html(team.clubManagerAbstract.value);
+        
         
         //stadiumContainer.className = "dark-panel-no-scroll";
         $(stadiumTitle).html('Stadium:');
