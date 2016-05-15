@@ -793,16 +793,17 @@ function getJournalistBrief(clientData, response){
 			allResults = results.results.bindings;
 			team1ReturnResults["clubName"] = allResults[0]["callret-0"];
 			team1ReturnResults["clubAbstract"] = allResults[0].abstract;
+			team1ReturnResults["clubManagerName"] = allResults[0]["callret-6"];
+			team1ReturnResults["clubManagerThumbnail"] = allResults[0].managerThumbnail;
 			team1ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
 			team1ReturnResults["clubGroundName"] = allResults[0]["callret-8"];
 			team1ReturnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
-			team1ReturnResults["clubManagerName"] = allResults[0]["callret-6"];
 			team1ReturnResults["clubGroundThumbnail"] = allResults[0].managerThumbnail;
 
 			var returnPlayers = [];
 			for(var i=0;i<allResults.length;i++){
 				var newPlayer = {};
-				newPlayer["playerName"] = allResults[i]["callret-1"];
+				newPlayer["playerName"] = allResults[i]["callret-2"];
 				newPlayer["playerDOB"] = allResults[i].playerDateOfBirth;
 				newPlayer["playerPosition"] = allResults[i].playerPositionLabel;
 				newPlayer["playerThumbnail"] = allResults[i].playerThumbnail;
@@ -823,16 +824,17 @@ function getJournalistBrief(clientData, response){
 				allResults = results.results.bindings;
 				team2ReturnResults["clubName"] = allResults[0]["callret-0"];
 				team2ReturnResults["clubAbstract"] = allResults[0].abstract;
+				team2ReturnResults["clubManagerName"] = allResults[0]["callret-6"];
+				team2ReturnResults["clubManagerThumbnail"] = allResults[0].managerThumbnail;
 				team2ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
 				team2ReturnResults["clubGroundName"] = allResults[0]["callret-8"];
 				team2ReturnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
-				team2ReturnResults["clubManagerName"] = allResults[0]["callret-6"];
 				team2ReturnResults["clubGroundThumbnail"] = allResults[0].managerThumbnail;
 
 				var returnPlayers = [];
 				for(var i=0;i<allResults.length;i++){
 					var newPlayer = {};
-					newPlayer["playerName"] = allResults[i]["callret-1"];
+					newPlayer["playerName"] = allResults[i]["callret-2"];
 					newPlayer["playerDOB"] = allResults[i].playerDateOfBirth;
 					newPlayer["playerPosition"] = allResults[i].playerPositionLabel;
 					newPlayer["playerThumbnail"] = allResults[i].playerThumbnail;
