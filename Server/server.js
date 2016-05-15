@@ -798,7 +798,6 @@ function getJournalistBrief(clientData, response){
 			team1ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
 			team1ReturnResults["clubGroundName"] = allResults[0]["callret-8"];
 			team1ReturnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
-			team1ReturnResults["clubGroundThumbnail"] = allResults[0].managerThumbnail;
 
 			var returnPlayers = [];
 			for(var i=0;i<allResults.length;i++){
@@ -829,7 +828,6 @@ function getJournalistBrief(clientData, response){
 				team2ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
 				team2ReturnResults["clubGroundName"] = allResults[0]["callret-8"];
 				team2ReturnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
-				team2ReturnResults["clubGroundThumbnail"] = allResults[0].managerThumbnail;
 
 				var returnPlayers = [];
 				for(var i=0;i<allResults.length;i++){
