@@ -193,6 +193,11 @@ function handleResponseFromServer(data){
         var managerTitle = document.createElement("p");
         var managerImg = document.createElement("img");
         var managerText = document.createElement("p");
+        var stadiumContainer = document.createElement("div");
+        var stadiumTable = document.createElement("table");
+        var stadiumRow = document.createElement("tr");
+        var stadiumColumn1 = document.createElement("td");
+        var stadiumColumn2 = document.createElement("td");
         var stadiumTitle = document.createElement("p");
         var stadiumName = document.createElement("p");
         var stadiumImg = document.createElement("img");
@@ -216,6 +221,8 @@ function handleResponseFromServer(data){
         teamContainer.appendChild(playersSlider);
         teamContainer.appendChild(document.createElement("br"));
 
+        teamContainer.className="display_tile";
+        $(teamContainer).css("padding", "20px");
         $(teamName).html(team.clubName.value);
         $(teamName).css('font-size','180%');
         $(abstractTitle).html('Description:');
@@ -255,31 +262,42 @@ function handleResponseFromServer(data){
 
         teamContainer.appendChild(managerTitle);
         teamContainer.appendChild(document.createElement("br"));
-        teamContainer.appendChild(managerImg);
-        teamContainer.appendChild(document.createElement("br"));
         teamContainer.appendChild(managerText);
         teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(managerImg);
+        teamContainer.appendChild(document.createElement("br"));
         teamContainer.appendChild(document.createElement("br"));
 
-        teamContainer.appendChild(stadiumTitle);
-        teamContainer.appendChild(document.createElement("br"));
-        teamContainer.appendChild(stadiumName);
-        teamContainer.appendChild(document.createElement("br"));
-        teamContainer.appendChild(stadiumImg);
-        teamContainer.appendChild(document.createElement("br"));
-        teamContainer.appendChild(stadiumText);
-        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(stadiumContainer);
+        stadiumContainer.appendChild(stadiumTitle);
+        stadiumContainer.appendChild(document.createElement("br"));
+
+        stadiumContainer.appendChild(stadiumTable);
+        stadiumTable.appendChild(stadiumRow);
+        stadiumRow.appendChild(stadiumColumn1);
+        stadiumRow.appendChild(stadiumColumn2);
+
+        stadiumColumn1.appendChild(stadiumName);
+        stadiumColumn1.appendChild(document.createElement("br"));
+        stadiumColumn1.appendChild(stadiumImg);
+        stadiumColumn1.appendChild(document.createElement("br"));
+        stadiumColumn2.appendChild(stadiumText);
+        stadiumColumn2.appendChild(document.createElement("br"));
 
         $(managerTitle).html('Manager:');
-        //$(managerImg).attr('src',)
-        managerTitle.className = "subheading";
         $(managerText).html(team.clubManagerName.value);
-
+        $(managerImg).attr('src', team.clubManagerThumbnail.value)
+        $(managerImg).css('height','200px');
+        managerTitle.className = "subheading";
+        
+        //stadiumContainer.className = "dark-panel-no-scroll";
         $(stadiumTitle).html('Stadium:');
         stadiumTitle.className = "subheading";
+        $(stadiumColumn1).css('width','30%');
         $(stadiumName).html(team.clubGroundName.value);
         $(stadiumImg).attr('src', team.clubGroundThumbnail.value);
         $(stadiumImg).css('height','200px');
+        $(stadiumImg).css('display', 'block-inline');
         $(stadiumText).html(team.clubGroundAbstract.value);
 
 
@@ -287,7 +305,7 @@ function handleResponseFromServer(data){
         teamContainer.appendChild(document.createElement("br"));
 
 
-        $('#teams_displays').css("display", "block");
+        $(teamContainer).css("display", "block");
     }
 
 
