@@ -794,6 +794,7 @@ function getJournalistBrief(clientData, response){
 			team1ReturnResults["clubName"] = allResults[0]["callret-0"];
 			team1ReturnResults["clubAbstract"] = allResults[0].abstract;
 			team1ReturnResults["clubManagerName"] = allResults[0]["callret-6"];
+			team1ReturnResults["clubManagerAbstract"] = allResults[0].managerAbstract;
 			team1ReturnResults["clubManagerThumbnail"] = allResults[0].managerThumbnail;
 			team1ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
 			team1ReturnResults["clubGroundName"] = allResults[0]["callret-8"];
@@ -824,6 +825,7 @@ function getJournalistBrief(clientData, response){
 				team2ReturnResults["clubName"] = allResults[0]["callret-0"];
 				team2ReturnResults["clubAbstract"] = allResults[0].abstract;
 				team2ReturnResults["clubManagerName"] = allResults[0]["callret-6"];
+				team2ReturnResults["clubManagerAbstract"] = allResults[0].managerAbstract;
 				team2ReturnResults["clubManagerThumbnail"] = allResults[0].managerThumbnail;
 				team2ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
 				team2ReturnResults["clubGroundName"] = allResults[0]["callret-8"];
@@ -873,7 +875,7 @@ function gracefulShutdown(){
 }
 
 function sparqlFootballClubQuery(teamDBPediaPage){
-	sparqlQuery = "SELECT MIN((?clubName) as ?clubName) ?abstract MIN((?playerName) as ?playerName) ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel MIN((?managerName) as ?managerName) ?managerThumbnail MIN((?groundName) as ?groundName) ?groundAbstract ?groundThumbnail"
+	sparqlQuery = "SELECT MIN((?clubName) as ?clubName) ?abstract MIN((?playerName) as ?playerName) ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel MIN((?managerName) as ?managerName) ?managerThumbnail MIN((?groundName) as ?groundName) ?groundAbstract ?groundThumbnail ?managerAbstract"
 	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
 	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:clubname ?clubName FILTER langMatches(lang(?abstract),'en')."
@@ -888,6 +890,7 @@ function sparqlFootballClubQuery(teamDBPediaPage){
 
 	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:manager ?manager."
 	sparqlQuery = sparqlQuery + " ?manager dbp:name ?managerName FILTER langMatches(lang(?managerName),'en')."
+	sparqlQuery = sparqlQuery + " ?manager dbo:abstract ?managerAbstract."
 	sparqlQuery = sparqlQuery + " ?manager dbo:thumbnail ?managerThumbnail."
 
 	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:ground ?ground."
