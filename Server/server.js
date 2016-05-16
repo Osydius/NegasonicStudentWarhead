@@ -82,6 +82,10 @@ app.post('/journalistBrief.html', function(request, response){
 	getJournalistBrief(request.body, response);
 });
 
+app.post('/', function(request, response){
+	getPlayerHistory(request.body, response);
+});
+
 /*
 * Takes a set of query data to generate a query that will be used to get tweets from Twitter using the search API.
 * The query using AND logic to search for all applicable tweets. When a team and player Twitter-handles are provided,
@@ -253,10 +257,13 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets, data
 						//The following log returns all the tweets found so that they can be recorded.
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-		    			response.end(returnedTweets);
+		    		response.end(returnedTweets);
 					}
 				} else {
 					console.log("no statuses found");
+					returnedTweets = JSON.stringify(null);
+					response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+	    		response.end(returnedTweets);
 				}
 			}
 		});
@@ -284,6 +291,9 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets, data
 					}
 				} else {
 					console.log("no statuses found");
+					returnedTweets = JSON.stringify(null);
+					response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+	    		response.end(returnedTweets);
 				}
 			}
 		});
@@ -782,9 +792,9 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 }
 
 function getJournalistBrief(clientData, response){
-	queryDate = clientData["date"][0];
-	queryTeam1 = clientData["team1"];
-	queryTeam2 = clientData["team2"];
+	var queryDate = clientData["date"][0];
+	var queryTeam1 = clientData["team1"];
+	var queryTeam2 = clientData["team2"];
 	var returnResults = {}
 	DBPediaClient.query(sparqlFootballClubQuery(queryTeam1)).execute(function(error, results){
 		var team1ReturnResults = {}
@@ -856,8 +866,16 @@ function getJournalistBrief(clientData, response){
 			response.end(JSON.stringify(returnResults));
 		});
 	});
+}
 
-
+function getPlayerHistory(clientData, response){
+	var player = clientData["player"];
+	var returnResults = {};
+	DBPediaClient.query(sparqlFootballPlayerQuery(player)).execute(function(error, results){
+		returnResults = null;
+		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+		response.end(JSON.stringify(returnResults));
+	});
 }
 
 /*
@@ -883,9 +901,9 @@ function sparqlFootballClubQuery(teamDBPediaPage){
 	sparqlQuery = "SELECT MIN((?clubName) as ?clubName) ?abstract MIN((?playerName) as ?playerName) ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel MIN((?managerName) as ?managerName) ?managerThumbnail MIN((?groundName) as ?groundName) ?groundAbstract ?groundThumbnail ?managerAbstract ?players ?playerPosition ?manager ?ground"
 	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
-	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:clubname ?clubName FILTER langMatches(lang(?abstract),'en')."
-	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbo:abstract ?abstract FILTER langMatches(lang(?abstract),'en')."
-	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:name ?players."
+	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:clubname ?clubName FILTER langMatches(lang(?abstract),'en')."
+	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbo:abstract ?abstract FILTER langMatches(lang(?abstract),'en')."
+	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:name ?players."
 	sparqlQuery = sparqlQuery + " ?players dbp:name ?playerName FILTER langMatches(lang(?playerPositionLabel),'en')."
 	sparqlQuery = sparqlQuery + " ?players dbp:position ?playerPosition."
 	sparqlQuery = sparqlQuery + " ?players dbo:birthDate ?playerDateOfBirth."
@@ -907,15 +925,30 @@ function sparqlFootballClubQuery(teamDBPediaPage){
 	return sparqlQuery
 }
 
-function sparqlFootballPlayerQuery(){
-	sparqlQuery = "SELECT ?playerName ?playerPosition ?playerDOB ?playerThumbnail ?playerPositionLabel  WHERE {"
+function sparqlFootballPlayerQuery(playerDBPediaPage){
+	sparqlQuery = "SELECT ?playerName ?playerPosition ?playerDOB ?playerThumbnail ?playerPositionLabel"
+	parqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
-	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/David_de_Gea> dbp:name ?playerName;"
-	sparqlQuery = sparqlQuery + "dbo:position ?playerPosition; dbp:dateOfBirth ?playerDOB; dbo:thumbnail ?playerThumbnail."
+	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:name ?playerName."
+	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:fullname ?playerName."
+	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:position ?playerPosition."
+	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:dateOfBirth ?playerDOB."
+	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:thumbnail ?playerThumbnail."
+	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:birthPlace ?playerBirthPlace."
 
-	sparqlQuery = sparqlQuery + "?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
+	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
+	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:comment ?playerPositionComment FILTER langMatches(lang(?playerPositionLabel),'en')."
 
-	sparqlQuery = sparqlQuery + "<http://dbpedia.org/resource/David_de_Gea> dbo:abstract ?playerAbstract"
+	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:abstract ?playerAbstract."
+
+	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:careerStation ?playerCareerStation."
+	sparqlQuery = sparqlQuery + " ?playerCareerStation dbo:team ?playerCareerStationTeam."
+	sparqlQuery = sparqlQuery + " ?playerCareerStation dbo:years ?playerCareerStationYears."
+	sparqlQuery = sparqlQuery + " ?playerCareerStation dbo:numberOfGoals ?playerCareerStationGoals."
+	sparqlQuery = sparqlQuery + " ?playerCareerStation dbo:numberOfMatches ?playerCareerStationMatches."
+
+	sparqlQuery = sparqlQuery + " ?playerCareerStationTeam dbp:clubName ?playerCareerStationTeamClubName."
+	sparqlQuery = sparqlQuery + " ?playerCareerStationTeam rdfs:comment ?playerCareerStationTeamComment."
 
 	sparqlQuery = sparqlQuery + " }"
 	return sparqlQuery
