@@ -177,9 +177,12 @@ $.fn.serializeObject = function (eventId) {
 
         //if this stage has been reached validations passed so run the ajax query
         if(eventId == "sendALLButton"){
-            sendALLAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
+            sendALLAjaxQuery('http://localhost:3000/', 
+                JSON.stringify({"team": $('#team_id').val(), "players": userInput.players, "hashtags": userInput.hashtags, "keywords": userInput.keywords}));
+
         } else if (eventId == "sendANYButton"){
-            sendANYAjaxQuery('http://localhost:3000/', JSON.stringify(userInput));
+            sendANYAjaxQuery('http://localhost:3000/', 
+                JSON.stringify({"team": $('#team_id').val(), "players": userInput.players, "hashtags": userInput.hashtags, "keywords": userInput.keywords}));
         }
     }
 
@@ -758,10 +761,25 @@ $(document).ready(function() {
         success: function (data) {
             var clubs =[]
             for(i=0; i<data.length; i++){
-                clubs.push(data[i].name);
+                var club = {value: data[i].twitterHandle, label: data[i].name}
+                clubs.push(club)
             }
+            console.log(clubs)
             $( "#team" ).autocomplete({
-                source: clubs
+                source: clubs,
+                select: function (event, ui) {
+                    event.preventDefault();
+                    $("#team").val(ui.item.label); // display the selected text
+                    $("#team_id").val(ui.item.value); // save selected id to hidden input
+                    return false;
+                },
+                change: function( event, ui ) {
+                    $( "#team_id" ).val( ui.item? ui.item.value : 0 );
+                },
+                focus: function(event, ui) {
+                    event.preventDefault();
+                    $("#team").val(ui.item.label);
+                }
             });
         },
         error: function (xhr, status, error) {
