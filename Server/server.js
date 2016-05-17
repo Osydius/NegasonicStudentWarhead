@@ -870,11 +870,44 @@ function getJournalistBrief(clientData, response){
 
 function getPlayerHistory(clientData, response){
 	var player = clientData["player"];
-	var returnResults = {};
+	var playerReturnResults = {};
 	DBPediaClient.query(sparqlFootballPlayerQuery(player)).execute(function(error, results){
-		returnResults = null;
+		if(results.results.bindings.length > 0){
+			allResults = results.results.bindings;
+			playerReturnResults["playerName"] = allResults[0]["callret-0"];
+			playerReturnResults["playerFullname"] = allResults[0]["callret-1"];
+			playerReturnResults["playerPosition"] = allResults[0].playerPosition;
+			playerReturnResults["playerDOB"] = allResults[0].playerDOB;
+			playerReturnResults["playerThumbnail"] = allResults[0].playerThumbnail;
+			playerReturnResults["playerBirthPlace"] = allResults[0].playerBirthPlace;
+			playerReturnResults["playerPositionLabel"] = allResults[0].playerPositionLabel;
+			playerReturnResults["playerPositionComment"] = allResults[0].playerPositionComment;
+			playerReturnResults["playerBirthPlaceName"] = allResults[0]["callret-8"];
+			playerReturnResults["playerBirthPlaceLatitude"] = allResults[0].playerBirthPlaceLatitude;
+			playerReturnResults["playerBirthPlaceLongitude"] = allResults[0].playerBirthPlaceLatitude;
+			playerReturnResults["playerAbstract"] = allResults[0].playerAbstract;
+
+			var returnCareerStations = [];
+			for(var i=0;i<allResults.length;i++){
+				var newCareerStation = {};
+				newCareerStation["playerCareerStation"] = allResults[i].playerCareerStation;
+				newCareerStation["playerCareerStationTeam"] = allResults[i].playerCareerStationTeam;
+				newCareerStation["playerCareerStationYears"] = allResults[i].playerCareerStationYears;
+				newCareerStation["playerCareerStationGoals"] = allResults[i].playerCareerStationGoals;
+				newCareerStation["playerCareerStationMatches"] = allResults[i].playerCareerStationMatches;
+				newCareerStation["playerCareerStationTeamClubName"] = allResults[i].playerCareerStationTeamClubName;
+				newCareerStation["playerCareerStationTeamComment"]= allResults[i].playerCareerStationTeamComment;
+
+				returnCareerStations.push(newCareerStation);
+			}
+			playerReturnResults["playerCareerStations"] = returnCareerStations;
+
+		} else {
+			playerReturnResults = null;
+		}
+
 		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-		response.end(JSON.stringify(returnResults));
+		response.end(JSON.stringify(playerReturnResults));
 	});
 }
 
@@ -898,7 +931,22 @@ function gracefulShutdown(){
 }
 
 function sparqlFootballClubQuery(teamDBPediaPage){
-	sparqlQuery = "SELECT MIN((?clubName) as ?clubName) ?abstract MIN((?playerName) as ?playerName) ?playerDateOfBirth ?playerThumbnail ?playerPositionLabel MIN((?managerName) as ?managerName) ?managerThumbnail MIN((?groundName) as ?groundName) ?groundAbstract ?groundThumbnail ?managerAbstract ?players ?playerPosition ?manager ?ground"
+	sparqlQuery = "SELECT MIN((?clubName) as ?clubName)"
+	sparqlQuery = sparqlQuery + " ?abstract"
+	sparqlQuery = sparqlQuery + " MIN((?playerName) as ?playerName)"
+	sparqlQuery = sparqlQuery + " ?playerDateOfBirth"
+	sparqlQuery = sparqlQuery + " ?playerThumbnail"
+	sparqlQuery = sparqlQuery + " ?playerPositionLabel"
+	sparqlQuery = sparqlQuery + " MIN((?managerName) as ?managerName)"
+	sparqlQuery = sparqlQuery + " ?managerThumbnail"
+	sparqlQuery = sparqlQuery + " MIN((?groundName) as ?groundName)"
+	sparqlQuery = sparqlQuery + " ?groundAbstract"
+	sparqlQuery = sparqlQuery + " ?groundThumbnail"
+	sparqlQuery = sparqlQuery + " ?managerAbstract"
+	sparqlQuery = sparqlQuery + " ?players"
+	sparqlQuery = sparqlQuery + " ?playerPosition"
+	sparqlQuery = sparqlQuery + " ?manager"
+	sparqlQuery = sparqlQuery + " ?ground"
 	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
 	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:clubname ?clubName FILTER langMatches(lang(?abstract),'en')."
@@ -926,20 +974,42 @@ function sparqlFootballClubQuery(teamDBPediaPage){
 }
 
 function sparqlFootballPlayerQuery(playerDBPediaPage){
-	sparqlQuery = "SELECT ?playerName ?playerPosition ?playerDOB ?playerThumbnail ?playerPositionLabel"
-	parqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
+	sparqlQuery = "SELECT MIN((?playerName) as ?playerName)"
+	sparqlQuery = sparqlQuery + " MIN((?playerFullName) as ?playerFullName)"
+	sparqlQuery = sparqlQuery + " ?playerPosition"
+	sparqlQuery = sparqlQuery + " ?playerDOB"
+	sparqlQuery = sparqlQuery + " ?playerThumbnail"
+	sparqlQuery = sparqlQuery + " ?playerBirthPlace"
+	sparqlQuery = sparqlQuery + " MIN((?playerPositionLabel) as ?playerPositionLabel)"
+	sparqlQuery = sparqlQuery + " MIN((?playerPositionComment) as ?playerPositionComment)"
+	sparqlQuery = sparqlQuery + " MIN((?playerBirthPlaceName) as ?playerBirthPlaceName)"
+	sparqlQuery = sparqlQuery + " ?playerBirthPlaceLatitude"
+	sparqlQuery = sparqlQuery + " ?playerBirthPlaceLongitude"
+	sparqlQuery = sparqlQuery + " ?playerAbstract"
+	sparqlQuery = sparqlQuery + " ?playerCareerStation"
+	sparqlQuery = sparqlQuery + " ?playerCareerStationTeam"
+	sparqlQuery = sparqlQuery + " ?playerCareerStationYears"
+	sparqlQuery = sparqlQuery + " ?playerCareerStationGoals"
+	sparqlQuery = sparqlQuery + " ?playerCareerStationMatches"
+	sparqlQuery = sparqlQuery + " MIN((?playerCareerStationTeamClubName) as ?playerCareerStationTeamClubName)"
+	sparqlQuery = sparqlQuery + " MIN((?playerCareerStationTeamComment) as ?playerCareerStationTeamComment)"
+	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
-	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:name ?playerName."
-	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:fullname ?playerName."
+	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:name ?playerName FILTER langMatches(lang(?playerName),'en')."
+	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:fullname ?playerFullName FILTER langMatches(lang(?playerFullName),'en')."
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:position ?playerPosition."
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:dateOfBirth ?playerDOB."
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:thumbnail ?playerThumbnail."
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:birthPlace ?playerBirthPlace."
 
 	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
-	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:comment ?playerPositionComment FILTER langMatches(lang(?playerPositionLabel),'en')."
+	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:comment ?playerPositionComment FILTER langMatches(lang(?playerPositionComment),'en')."
 
-	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:abstract ?playerAbstract."
+	sparqlQuery = sparqlQuery + " ?playerBirthPlace rdfs:label ?playerBirthPlaceName FILTER langMatches(lang(?playerPositionComment),'en')."
+	sparqlQuery = sparqlQuery + " ?playerBirthPlace geo:lat ?playerBirthPlaceLatitude."
+	sparqlQuery = sparqlQuery + " ?playerBirthPlace geo:long ?playerBirthPlaceLongitude."
+
+	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:abstract ?playerAbstract FILTER langMatches(lang(?playerAbstract),'en')."
 
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:careerStation ?playerCareerStation."
 	sparqlQuery = sparqlQuery + " ?playerCareerStation dbo:team ?playerCareerStationTeam."
@@ -947,8 +1017,8 @@ function sparqlFootballPlayerQuery(playerDBPediaPage){
 	sparqlQuery = sparqlQuery + " ?playerCareerStation dbo:numberOfGoals ?playerCareerStationGoals."
 	sparqlQuery = sparqlQuery + " ?playerCareerStation dbo:numberOfMatches ?playerCareerStationMatches."
 
-	sparqlQuery = sparqlQuery + " ?playerCareerStationTeam dbp:clubName ?playerCareerStationTeamClubName."
-	sparqlQuery = sparqlQuery + " ?playerCareerStationTeam rdfs:comment ?playerCareerStationTeamComment."
+	sparqlQuery = sparqlQuery + " ?playerCareerStationTeam rdfs:label ?playerCareerStationTeamClubName FILTER langMatches(lang(?playerCareerStationTeamClubName),'en')."
+	sparqlQuery = sparqlQuery + " ?playerCareerStationTeam rdfs:comment ?playerCareerStationTeamComment FILTER langMatches(lang(?playerCareerStationTeamComment),'en')."
 
 	sparqlQuery = sparqlQuery + " }"
 	return sparqlQuery
