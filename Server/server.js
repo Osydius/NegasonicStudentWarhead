@@ -68,11 +68,19 @@ app.get('/getClubs.html', function (request, response) {
 /********** POST METHODS **********/
 app.post('/getAllTweets.html', function(request, response){
 	//getAllTweets(request.body, response);
-	getAllDatabaseTweets(request.body, response);
+	getAllDatabaseTweets(request.body, response, false);
 });
 
 app.post('/getAnyTweets.html', function(request, response){
-	getAnyTweets(request.body, response);
+	getAnyDatabaseTweets(request.body, response, false);
+});
+
+app.post('/getAllDatabaseTweets.html', function(request, response){
+	getAllDatabaseTweets(request.body, response, true);
+});
+
+app.post('/getAnyDatabaseTweets.html', function(request, response){
+	getAnyDatabaseTweets(request.body, response, true);
 });
 
 app.post('/findClubTwitterHandle.html', function(request, response){
@@ -683,7 +691,7 @@ function newTweetTwitterMedia(tweetId, mediaId, startPoint, endPoint){
 *                             and potential keywords that will be used in the query.
 * @param {object} response - A response object that will be used to return the results once they have been found.
 */
-function getAllDatabaseTweets(queryData, response){
+function getAllDatabaseTweets(queryData, response, onlyDatabase){
 	var currentResults = [];
 	mySqlConnection.query('SELECT * FROM twitterusers WHERE twitterUserScreenName = ?', [queryData.team], function(error, result){
 		if(result.length != 0){
@@ -696,10 +704,44 @@ function getAllDatabaseTweets(queryData, response){
 
 				var newUser = {};
 			}
-			getDatabaseQueryTweets(queryData, response, userIdList, 0, [], userInfo, 'all')
+			getDatabaseQueryTweets(queryData, response, userIdList, 0, [], userInfo, 'all', onlyDatabase)
 		} else {
-			getAllTweets(queryData, response, null)
+			if(!onlyDatabase){
+				getAllTweets(queryData, response, null)
+			} else {
+				returnResults = JSON.stringify(null);
+				response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+				response.end(returnResults);
+			}
 		}
+
+	});
+}
+
+function getAnyDatabaseTweets(queryData, response, onlyDatabase){
+	var currentResults = [];
+	mySqlConnection.query('SELECT * FROM twitterusers WHERE twitterUserScreenName = ?', [queryData.team], function(error, result){
+		if(result.length != 0){
+			var userIdList = [];
+			var userInfo = {};
+			userInfo.name = result[0].twitterUserName;
+			userInfo.screen_name = result[0].twitterUserScreenName;
+			for(var i=0;i<result.length;i++){
+				userIdList.push(result[i].twitterUserId);
+
+				var newUser = {};
+			}
+			getDatabaseQueryTweets(queryData, response, userIdList, 0, [], userInfo, 'all', onlyDatabase)
+		} else {
+			if(!onlyDatabase){
+				getAllTweets(queryData, response, null)
+			} else {
+				returnResults = JSON.stringify(null);
+				response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
+				response.end(returnResults);
+			}
+		}
+
 	});
 }
 
@@ -716,7 +758,7 @@ function getAllDatabaseTweets(queryData, response){
 *                            the need to use repeated information if duplicates are created.
 * @param {string} queryType - The type of query that is currently being used 'any' or 'all'.
 */
-function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch, currentResults, userInfo, queryType){
+function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch, currentResults, userInfo, queryType, onlyDatabase){
 	mySqlConnection.query('SELECT * FROM tweets WHERE twitterUserId = ?', [tweetUserIds[currentSearch]], function(error, result){
 		if(result.length != 0){
 			for(var i=0;i<result.length;i++){
@@ -735,24 +777,26 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 				var currentTweet = currentResults[i];
 				var sendBack = true;
 
-				if(queryData.hashtags.length != 0){
-					for(var j=0;j<queryData.hashtags.length;j++){
-						if(currentTweet.tweetText.indexOf('#' + queryData.hashtags[j]) == -1){
-							sendBack = false;
+				if(queryType == 'all'){
+					if(queryData.hashtags.length != 0){
+						for(var j=0;j<queryData.hashtags.length;j++){
+							if(currentTweet.tweetText.indexOf('#' + queryData.hashtags[j]) == -1){
+								sendBack = false;
+							}
 						}
 					}
-				}
 
-				if(queryData.keywords.length != 0){
-					for(var j=0;j<queryData.keywords.length;j++){
-						if(currentTweet.tweetText.indexOf('#' + queryData.keywords[j]) == -1){
-							sendBack = false;
+					if(queryData.keywords.length != 0){
+						for(var j=0;j<queryData.keywords.length;j++){
+							if(currentTweet.tweetText.indexOf('#' + queryData.keywords[j]) == -1){
+								sendBack = false;
+							}
 						}
 					}
-				}
 
-				if(sendBack){
-					tempReturnResults.push(currentTweet);
+					if(sendBack){
+						tempReturnResults.push(currentTweet);
+					}
 				}
 			}
 
@@ -777,9 +821,9 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 			}
 
 			if(returnResults.length < totalTweetsWanted){
-				if(queryType == 'all'){
+				if(queryType == 'all' && !onlyDatabase){
 					getAllTweets(queryData, response, returnResults);
-				} else if(queryType == 'any'){
+				} else if(queryType == 'any' && !onlyDatabase){
 					getAnyTweets(queryData, response, returnResults);
 				} else {
 					returnResults = JSON.stringify(returnResults);
