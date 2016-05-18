@@ -764,7 +764,6 @@ $(document).ready(function() {
                 var club = {value: data[i].twitterHandle, label: data[i].name}
                 clubs.push(club)
             }
-            console.log(clubs)
             $( "#team" ).autocomplete({
                 source: clubs,
                 select: function (event, ui) {

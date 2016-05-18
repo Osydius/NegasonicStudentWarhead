@@ -840,7 +840,7 @@ function getJournalistBrief(clientData, response){
 			team1ReturnResults["players"] = returnPlayers;
 
 			weather.now([[team1ReturnResults["clubGroundLatitude"].value, team1ReturnResults["clubGroundLongitude"].value]] , function(error, results){
-				console.log(results[0].values);
+				//console.log(results[0].values);
 			});
 		} else {
 			team1ReturnResults = null;

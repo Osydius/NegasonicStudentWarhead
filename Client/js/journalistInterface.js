@@ -95,7 +95,6 @@ function sendDataToServer(userInput){
     //$('#team1_id').val()
 
     data = JSON.stringify({"date": userInput.date, "team1": $('#team1_id').val(), "team2": $('#team2_id').val()});
-    console.log(data);
     $.ajax({
         dataType: 'json',
         contentType: "application/json",
@@ -184,6 +183,7 @@ function handleResponseFromServer(data){
         console.log(key)
         console.log(team)
 
+
         var teamContainer = document.createElement("div");
         var teamName = document.createElement("p");
         var abstractTitle = document.createElement("p");
@@ -229,11 +229,14 @@ function handleResponseFromServer(data){
 
         teamContainer.className="display_tile";
         $(teamContainer).css("padding", "20px");
+        teamContainer.setAttribute('about',team.club);
         $(teamName).html(team.clubName.value);
         $(teamName).css('font-size','180%');
+        teamName.setAttribute('property','dbp:clubname');
         $(abstractTitle).html('Description:');
         abstractTitle.className = "subheading";
         $(abstractText).html(team.clubAbstract.value);
+        abstractText.setAttribute('property','dbo:abstract');
         $(playersTitle).html('Players:');
         playersTitle.className = "subheading";
         playersSlider.className ='dark-panel';
@@ -246,6 +249,7 @@ function handleResponseFromServer(data){
             var playerTile = document.createElement("div");
             var playerImg = document.createElement("img");
             var playerName = document.createElement("p");
+            var playerPosContainer = document.createElement("div");
             var playerPos = document.createElement("p");
             var playerDOB = document.createElement("p");
 
@@ -254,16 +258,26 @@ function handleResponseFromServer(data){
             playerTile.appendChild(document.createElement("br"));
             playerTile.appendChild(playerName);
             playerTile.appendChild(document.createElement("br"));
-            playerTile.appendChild(playerPos);
-            playerTile.appendChild(document.createElement("br"));
             playerTile.appendChild(playerDOB);
-
+            playerTile.appendChild(document.createElement("br"));
+            playerTile.appendChild(playerPosContainer);
+            playerPosContainer.appendChild(playerPos);
+            playerTile.appendChild(document.createElement("br"));
+            
             playerTile.className = "playertile";
+            playerTile.setAttribute('about',team.players[i].player.value);
+            playerTile.setAttribute('property','dbp:name');
             $(playerImg).attr('src', team.players[i].playerThumbnail.value);
             playerImg.className = "playerImg";
+            playerImg.setAttribute('property','dbo:thumbnail');
             $(playerName).html(team.players[i].playerName.value);
-            $(playerPos).html(team.players[i].playerPosition.value);
+            playerName.setAttribute('property','dbp:name');
+            $(playerPos).html(team.players[i].playerPositionLabel.value);
             $(playerDOB).html(team.players[i].playerDOB.value);
+            playerDOB.setAttribute('property','dbo:birthDate');
+            playerPosContainer.setAttribute('about',team.players[i].playerPosition.value);
+            playerPosContainer.setAttribute('property','dbp:position');
+            playerPos.setAttribute('property','rdfs:label');
         }
 
 
@@ -282,6 +296,12 @@ function handleResponseFromServer(data){
         managerColumn2.appendChild(managerText);
         managerColumn2.appendChild(document.createElement("br"));
 
+        managerRow.setAttribute('property','dbp:manager');
+        managerRow.setAttribute('about',team.manager.value);
+        managerName.setAttribute('property','dbp:name');
+        managerImg.setAttribute('property','dbo:thumbnail');
+        managerText.setAttribute('property','dbo:abstract');
+
         teamContainer.appendChild(document.createElement("br"));
         teamContainer.appendChild(document.createElement("br"));
 
@@ -299,6 +319,12 @@ function handleResponseFromServer(data){
         stadiumColumn1.appendChild(document.createElement("br"));
         stadiumColumn2.appendChild(stadiumText);
         stadiumColumn2.appendChild(document.createElement("br"));
+
+        stadiumRow.setAttribute('property','dbp:ground');
+        stadiumRow.setAttribute('about',team.ground.value);
+        stadiumName.setAttribute('property','dbp:name');
+        stadiumImg.setAttribute('property','dbo:thumbnail');
+        stadiumText.setAttribute('property','dbo:abstract');
 
         $(managerTitle).html('Manager:');
         managerTitle.className = "subheading";
