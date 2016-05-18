@@ -174,15 +174,24 @@ $.fn.serializeObject = function (eventId) {
             alert("Hashtag validation has failed\nHashtags must not:"+invalidHashtagRules);
             return false;
         }
-
         //if this stage has been reached validations passed so run the ajax query
-        if(eventId == "sendALLButton"){
+        //the query that is run will be one of four dending on button pressend and whether or not checkbox was checked
+        if($('#dbonly').is(':checked')){
+            //checked so do db only queries
+            if(eventId == "sendALLButton"){ 
+                //DB ONLY AND
+            } else if (eventId == "sendANYButton"){
+                //DB ONLY OR 
+            }
+        } else {
+            if(eventId == "sendALLButton"){
             sendALLAjaxQuery('http://localhost:3000/', 
                 JSON.stringify({"team": $('#team_id').val(), "players": userInput.players, "hashtags": userInput.hashtags, "keywords": userInput.keywords}));
 
-        } else if (eventId == "sendANYButton"){
-            sendANYAjaxQuery('http://localhost:3000/', 
-                JSON.stringify({"team": $('#team_id').val(), "players": userInput.players, "hashtags": userInput.hashtags, "keywords": userInput.keywords}));
+            } else if (eventId == "sendANYButton"){
+                sendANYAjaxQuery('http://localhost:3000/', 
+                    JSON.stringify({"team": $('#team_id').val(), "players": userInput.players, "hashtags": userInput.hashtags, "keywords": userInput.keywords}));
+            }
         }
     }
 
