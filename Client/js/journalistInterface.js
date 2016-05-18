@@ -252,6 +252,8 @@ function handleResponseFromServer(data){
             var playerPosContainer = document.createElement("div");
             var playerPos = document.createElement("p");
             var playerDOB = document.createElement("p");
+            var id =  "player"+i;
+            var hashtagId = "#player"+i;
 
             playersSlider.appendChild(playerTile);
             playerTile.appendChild(playerImg);
@@ -265,6 +267,7 @@ function handleResponseFromServer(data){
             playerTile.appendChild(document.createElement("br"));
             
             playerTile.className = "playertile";
+            playerTile.id = id;
             playerTile.setAttribute('about',team.players[i].player.value);
             playerTile.setAttribute('property','dbp:name');
             $(playerImg).attr('src', team.players[i].playerThumbnail.value);
@@ -278,6 +281,10 @@ function handleResponseFromServer(data){
             playerPosContainer.setAttribute('about',team.players[i].playerPosition.value);
             playerPosContainer.setAttribute('property','dbp:position');
             playerPos.setAttribute('property','rdfs:label');
+
+            $( document ).on( 'click', hashtagId, function() {
+               alert( 'WORKS! ' + jQuery(this).attr('about') );
+            });
         }
 
 
