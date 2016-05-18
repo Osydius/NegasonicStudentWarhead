@@ -177,12 +177,12 @@ function handleResponseFromServer(data){
     //players slider
     //manager
     //stadium
-
+    var j = 0;
     for(var key in data){
+        j=j+1;
         var team = data[key]
         console.log(key)
         console.log(team)
-
 
         var teamContainer = document.createElement("div");
         var teamName = document.createElement("p");
@@ -208,6 +208,9 @@ function handleResponseFromServer(data){
         var stadiumName = document.createElement("p");
         var stadiumImg = document.createElement("img");
         var stadiumText = document.createElement("p");
+        var mapTitle = document.createElement("p");
+        var mapText = document.createElement("p");
+        var map = document.createElement("div");
 
         $('#teams_displays').append(teamContainer);
         teamContainer.appendChild(teamName);
@@ -227,7 +230,7 @@ function handleResponseFromServer(data){
         teamContainer.appendChild(playersSlider);
         teamContainer.appendChild(document.createElement("br"));
 
-        teamContainer.className="display_tile";
+        teamContainer.className="display_tile_shown";
         $(teamContainer).css("padding", "20px");
         teamContainer.setAttribute('about',team.club);
         $(teamName).html(team.clubName.value);
@@ -252,8 +255,8 @@ function handleResponseFromServer(data){
             var playerPosContainer = document.createElement("div");
             var playerPos = document.createElement("p");
             var playerDOB = document.createElement("p");
-            var id =  "player"+i;
-            var hashtagId = "#player"+i;
+            var id =  "player"+i+j;
+            var hashtagId = "#player"+i+j;
 
             playersSlider.appendChild(playerTile);
             playerTile.appendChild(playerImg);
@@ -283,7 +286,22 @@ function handleResponseFromServer(data){
             playerPos.setAttribute('property','rdfs:label');
 
             $( document ).on( 'click', hashtagId, function() {
-               alert( 'WORKS! ' + jQuery(this).attr('about') );
+               //alert( 'WORKS! ' + jQuery(this).attr('about') );
+               data = JSON.stringify(jQuery(this).attr('about'));
+               console.log(data)
+               $.ajax({
+                    dataType: 'json',
+                    contentType: "application/json",
+                    type: 'POST',
+                    url: url+'getPlayerHistory.html',
+                    data: data,
+                    success: function (data) {
+                        console.log(data);
+                    },
+                    error: function (xhr, status, error) {
+                        console.log('Error: ' + error.message);
+                    }
+                });
             });
         }
 
@@ -326,6 +344,8 @@ function handleResponseFromServer(data){
         stadiumColumn1.appendChild(document.createElement("br"));
         stadiumColumn2.appendChild(stadiumText);
         stadiumColumn2.appendChild(document.createElement("br"));
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(document.createElement("br"));
 
         stadiumRow.setAttribute('property','dbp:ground');
         stadiumRow.setAttribute('about',team.ground.value);
@@ -342,7 +362,6 @@ function handleResponseFromServer(data){
         $(managerImg).css('display', 'block-inline');
         $(managerText).html(team.clubManagerAbstract.value);
         
-        
         //stadiumContainer.className = "dark-panel-no-scroll";
         $(stadiumTitle).html('Stadium:');
         stadiumTitle.className = "subheading";
@@ -353,12 +372,19 @@ function handleResponseFromServer(data){
         $(stadiumImg).css('display', 'block-inline');
         $(stadiumText).html(team.clubGroundAbstract.value);
 
+        teamContainer.appendChild(mapTitle);
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(mapText);
+        teamContainer.appendChild(document.createElement("br"));
+        teamContainer.appendChild(map);
+
+        mapTitle.className="subheading";
+        $(mapTitle).html('Team Map');
+        $(mapText).html('The map below displays the birthplace of each player on the team.');
 
         teamContainer.appendChild(document.createElement("br"));
         teamContainer.appendChild(document.createElement("br"));
 
-
-        $(teamContainer).css("display", "block");
     }
 
 

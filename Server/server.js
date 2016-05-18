@@ -87,7 +87,7 @@ app.post('/journalistBrief.html', function(request, response){
 	getJournalistBrief(request.body, response);
 });
 
-app.post('/', function(request, response){
+app.post('/getPlayerHistory.html', function(request, response){
 	getPlayerHistory(request.body, response);
 });
 
@@ -894,7 +894,7 @@ function getJournalistBrief(clientData, response){
 }
 
 function getPlayerHistory(clientData, response){
-	var player = clientData["player"];
+	var player = clientData;
 	var playerReturnResults = {};
 	DBPediaClient.query(sparqlFootballPlayerQuery(player)).execute(function(error, results){
 		if(results.results.bindings.length > 0){
