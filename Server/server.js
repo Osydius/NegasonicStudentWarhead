@@ -1064,7 +1064,7 @@ function sparqlFootballPlayerQuery(playerDBPediaPage){
 	sparqlQuery = sparqlQuery + " ?playerDOB"
 	sparqlQuery = sparqlQuery + " ?playerThumbnail"
 	sparqlQuery = sparqlQuery + " ?playerBirthPlace"
-	sparqlQuery = sparqlQuery + " MIN((?playerPositionLabel) as ?playerPositionLabel)"
+	sparqlQuery = sparqlQuery + " ?playerPositionLabel"
 	sparqlQuery = sparqlQuery + " MIN((?playerPositionComment) as ?playerPositionComment)"
 	sparqlQuery = sparqlQuery + " MIN((?playerBirthPlaceName) as ?playerBirthPlaceName)"
 	sparqlQuery = sparqlQuery + " ?playerBirthPlaceLatitude"
@@ -1075,8 +1075,8 @@ function sparqlFootballPlayerQuery(playerDBPediaPage){
 	sparqlQuery = sparqlQuery + " ?playerCareerStationYears"
 	sparqlQuery = sparqlQuery + " ?playerCareerStationGoals"
 	sparqlQuery = sparqlQuery + " ?playerCareerStationMatches"
-	sparqlQuery = sparqlQuery + " MIN((?playerCareerStationTeamClubName) as ?playerCareerStationTeamClubName)"
-	sparqlQuery = sparqlQuery + " MIN((?playerCareerStationTeamComment) as ?playerCareerStationTeamComment)"
+	sparqlQuery = sparqlQuery + " ?playerCareerStationTeamClubName"
+	sparqlQuery = sparqlQuery + " ?playerCareerStationTeamComment"
 	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:name ?playerName FILTER langMatches(lang(?playerName),'en')."
@@ -1085,11 +1085,12 @@ function sparqlFootballPlayerQuery(playerDBPediaPage){
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:dateOfBirth ?playerDOB."
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:thumbnail ?playerThumbnail."
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:birthPlace ?playerBirthPlace."
+	sparqlQuery = sparqlQuery + " VALUES ?playerBirthPlaceType {<http://dbpedia.org/ontology/Settlement>} ?playerBirthPlace a ?playerBirthPlaceType."
 
 	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
 	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:comment ?playerPositionComment FILTER langMatches(lang(?playerPositionComment),'en')."
 
-	sparqlQuery = sparqlQuery + " ?playerBirthPlace rdfs:label ?playerBirthPlaceName FILTER langMatches(lang(?playerPositionComment),'en')."
+	sparqlQuery = sparqlQuery + " ?playerBirthPlace rdfs:label ?playerBirthPlaceName FILTER langMatches(lang(?playerBirthPlaceName),'en')."
 	sparqlQuery = sparqlQuery + " ?playerBirthPlace geo:lat ?playerBirthPlaceLatitude."
 	sparqlQuery = sparqlQuery + " ?playerBirthPlace geo:long ?playerBirthPlaceLongitude."
 
