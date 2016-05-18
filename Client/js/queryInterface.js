@@ -54,6 +54,47 @@ function sendANYAjaxQuery(url, data) {
 });
 }
 
+
+function sendALLDatabaseAjaxQuery(url, data) {
+        $('.swirly').css('display','block');
+        $.ajax({
+            dataType: 'json',
+            contentType: "application/json",
+            type: 'POST',
+            url: url+'getAllDatabaseTweets.html',
+            data: data,
+            success: function (data) {
+                $('.swirly').css('display','none');
+                handleServerResponse(data);
+            },
+            error: function (xhr, status, error) {
+                $('.swirly').css('display','none');
+                console.log('Error: ' + error.message);
+               
+            }
+        });
+    }
+
+
+function sendANYDatabaseAjaxQuery(url, data) {
+    $('.swirly').css('display','block');
+    $.ajax({
+        dataType: 'json',
+        contentType: "application/json",
+        data: data,
+        type: 'POST',
+        url: url + 'getAnyDatabaseTweets.html',
+        success: function (data, status, xhr) {
+            $('.swirly').css('display','none');
+            handleServerResponse(data);
+        },
+            error: function (xhr, status, error) {
+                $('.swirly').css('display','none');
+            console.log('Error: ' + error.message);
+        }
+});
+}
+
 /**
  * Iterates through the terms entered in the form and packages them into an object
  * that contains all of the fields split into separate terms where appropriate. Then
@@ -179,9 +220,11 @@ $.fn.serializeObject = function (eventId) {
         if($('#dbonly').is(':checked')){
             //checked so do db only queries
             if(eventId == "sendALLButton"){ 
-                //DB ONLY AND
+                sendALLDatabaseAjaxQuery('http://localhost:3000/', 
+                JSON.stringify({"team": $('#team_id').val(), "players": userInput.players, "hashtags": userInput.hashtags, "keywords": userInput.keywords}));
             } else if (eventId == "sendANYButton"){
-                //DB ONLY OR 
+                sendANYDatabaseAjaxQuery('http://localhost:3000/', 
+                    JSON.stringify({"team": $('#team_id').val(), "players": userInput.players, "hashtags": userInput.hashtags, "keywords": userInput.keywords}));
             }
         } else {
             if(eventId == "sendALLButton"){
