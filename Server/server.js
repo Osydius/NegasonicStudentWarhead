@@ -18,6 +18,7 @@ var SparqlClient = require('sparql-client')
 var util = require('util');
 var url = require('url');
 var querystring = require('querystring');
+var weather = require('openweather-node');
 
 var config = require('./config.js');
 
@@ -29,6 +30,10 @@ mySqlConnection.connect();
 
 var DBPediaEndpoint = 'http://dbpedia.org/sparql';
 var DBPediaClient = new SparqlClient(DBPediaEndpoint);
+
+weather.setAPPID(config.openWeather);
+weather.setCulture("en");
+weather.setForecastType("daily");
 
 //Initialise server information
 var fileServer = new (static.Server)();
@@ -410,11 +415,11 @@ function findPlayerTwitterHandle(playerNames, totalSearches, currentPlayerSearch
 * @param {array} allTweets - An array containing all the tweets that have been returned from the Twitter search API.
 */
 function insertNewTweets(allTweets){
-	if(allTweets.length > 0){
-		for(i=0;i<allTweets.length;i++){
-			newTwitterUser(allTweets[i]);
-		}
-	}
+  if(allTweets.length > 0){
+    for(i=0;i<allTweets.length;i++){
+      newTwitterUser(allTweets[i]);
+    }
+  }
 }
 
 /*
@@ -424,7 +429,7 @@ function insertNewTweets(allTweets){
 */
 function newTwitterUser(tweetInfo){
 	var userInfo = tweetInfo.user;
-	var newUserInfo = {twitterUserName: userInfo.name, twitterUserScreenName: userInfo.screen_name, twitterUserTwitterId: userInfo.id};
+	var newUserInfo = {twitterUserName: userInfo.name, twitterUserScreenName: userInfo.screen_name, twitterUserTwitterId: userInfo.id_str};
 
 	mySqlConnection.query('SELECT * FROM twitterusers WHERE twitterUserTwitterId = ?', [userInfo.id], function(error, result){
 		if(error != null){
@@ -812,6 +817,8 @@ function getJournalistBrief(clientData, response){
 			team1ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
 			team1ReturnResults["clubGroundName"] = allResults[0]["callret-8"];
 			team1ReturnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
+			team1ReturnResults["clubGroundLatitude"] = allResults[0].groundLatitude;
+			team1ReturnResults["clubGroundLongitude"] = allResults[0].groundLongitude;
 
 			var returnPlayers = [];
 			for(var i=0;i<allResults.length;i++){
@@ -822,11 +829,19 @@ function getJournalistBrief(clientData, response){
 				newPlayer["playerPosition"] = allResults[i].playerPosition;
 				newPlayer["playerPositionLabel"] = allResults[i].playerPositionLabel;
 				newPlayer["playerThumbnail"] = allResults[i].playerThumbnail;
+				newPlayer["playerBirthPlace"] = allResults[i].playerBirthPlace;
+				newPlayer["playerBirthPlaceName"] = allResults[i].playerBirthPlaceName;
+				newPlayer["playerBirthPlaceLatitude"] = allResults[i].playerBirthPlaceLatitude;
+				newPlayer["playerBirthPlaceLongitude"] = allResults[i].playerBirthPlaceLongitude;
 
 				returnPlayers.push(newPlayer);
 			}
 
 			team1ReturnResults["players"] = returnPlayers;
+
+			weather.now([[team1ReturnResults["clubGroundLatitude"].value, team1ReturnResults["clubGroundLongitude"].value]] , function(error, results){
+				console.log(results[0].values);
+			});
 		} else {
 			team1ReturnResults = null;
 		}
@@ -837,22 +852,32 @@ function getJournalistBrief(clientData, response){
 			if(results.results.bindings.length > 0){
 				//There are results
 				allResults = results.results.bindings;
+				team2ReturnResults["club"] = queryTeam2;
 				team2ReturnResults["clubName"] = allResults[0]["callret-0"];
 				team2ReturnResults["clubAbstract"] = allResults[0].abstract;
+				team2ReturnResults["manager"] = allResults[0].manager;
 				team2ReturnResults["clubManagerName"] = allResults[0]["callret-6"];
 				team2ReturnResults["clubManagerAbstract"] = allResults[0].managerAbstract;
 				team2ReturnResults["clubManagerThumbnail"] = allResults[0].managerThumbnail;
+				team2ReturnResults["ground"] = allResults[0].ground;
 				team2ReturnResults["clubGroundAbstract"] = allResults[0].groundAbstract;
 				team2ReturnResults["clubGroundName"] = allResults[0]["callret-8"];
 				team2ReturnResults["clubGroundThumbnail"] = allResults[0].groundThumbnail;
+				team2ReturnResults["clubGroundLatitude"] = allResults[0].groundLatitude;
+				team2ReturnResults["clubGroundLongitude"] = allResults[0].groundLongitude;
 
 				var returnPlayers = [];
 				for(var i=0;i<allResults.length;i++){
 					var newPlayer = {};
+					newPlayer["player"] = allResults[i].players;
 					newPlayer["playerName"] = allResults[i]["callret-2"];
 					newPlayer["playerDOB"] = allResults[i].playerDateOfBirth;
 					newPlayer["playerPosition"] = allResults[i].playerPositionLabel;
 					newPlayer["playerThumbnail"] = allResults[i].playerThumbnail;
+					newPlayer["playerBirthPlace"] = allResults[i].playerBirthPlace;
+					newPlayer["playerBirthPlaceName"] = allResults[i].playerBirthPlaceName;
+					newPlayer["playerBirthPlaceLatitude"] = allResults[i].playerBirthPlaceLatitude;
+					newPlayer["playerBirthPlaceLongitude"] = allResults[i].playerBirthPlaceLongitude;
 
 					returnPlayers.push(newPlayer);
 				}
@@ -947,27 +972,41 @@ function sparqlFootballClubQuery(teamDBPediaPage){
 	sparqlQuery = sparqlQuery + " ?playerPosition"
 	sparqlQuery = sparqlQuery + " ?manager"
 	sparqlQuery = sparqlQuery + " ?ground"
+	sparqlQuery = sparqlQuery + " ?groundLatitude"
+	sparqlQuery = sparqlQuery + " ?groundLongitude"
+	sparqlQuery = sparqlQuery + " ?playerBirthPlace"
+	sparqlQuery = sparqlQuery + " MIN((?playerBirthPlaceName) as ?playerBirthPlaceName)"
+	sparqlQuery = sparqlQuery + " ?playerBirthPlaceLatitude"
+	sparqlQuery = sparqlQuery + " ?playerBirthPlaceLongitude"
 	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
-	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:clubname ?clubName FILTER langMatches(lang(?abstract),'en')."
+	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:clubname ?clubName FILTER langMatches(lang(?clubName),'en')."
 	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbo:abstract ?abstract FILTER langMatches(lang(?abstract),'en')."
 	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:name ?players."
-	sparqlQuery = sparqlQuery + " ?players dbp:name ?playerName FILTER langMatches(lang(?playerPositionLabel),'en')."
+
+	sparqlQuery = sparqlQuery + " ?players dbp:name ?playerName FILTER langMatches(lang(?playerName),'en')."
 	sparqlQuery = sparqlQuery + " ?players dbp:position ?playerPosition."
 	sparqlQuery = sparqlQuery + " ?players dbo:birthDate ?playerDateOfBirth."
 	sparqlQuery = sparqlQuery + " ?players dbo:thumbnail ?playerThumbnail."
+	sparqlQuery = sparqlQuery + " ?players dbo:birthPlace ?playerBirthPlace."
+
+	sparqlQuery = sparqlQuery + " ?playerBirthPlace rdfs:label ?playerBirthPlaceName FILTER langMatches(lang(?playerBirthPlaceName),'en')."
+	sparqlQuery = sparqlQuery + " ?playerBirthPlace geo:lat ?playerBirthPlaceLatitude."
+	sparqlQuery = sparqlQuery + " ?playerBirthPlace geo:long ?playerBirthPlaceLongitude."
 
 	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
 
-	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:manager ?manager."
+	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:manager ?manager."
 	sparqlQuery = sparqlQuery + " ?manager dbp:name ?managerName FILTER langMatches(lang(?managerName),'en')."
 	sparqlQuery = sparqlQuery + " ?manager dbo:abstract ?managerAbstract FILTER langMatches(lang(?managerAbstract),'en')."
 	sparqlQuery = sparqlQuery + " ?manager dbo:thumbnail ?managerThumbnail."
 
-	sparqlQuery = sparqlQuery + "<" + teamDBPediaPage + "> dbp:ground ?ground."
+	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:ground ?ground."
 	sparqlQuery = sparqlQuery + " ?ground dbp:name ?groundName FILTER langMatches(lang(?groundName),'en')."
 	sparqlQuery = sparqlQuery + " ?ground dbo:abstract ?groundAbstract FILTER langMatches(lang(?groundAbstract),'en')."
 	sparqlQuery = sparqlQuery + " ?ground dbo:thumbnail ?groundThumbnail."
+	sparqlQuery = sparqlQuery + " ?ground geo:lat ?groundLatitude."
+	sparqlQuery = sparqlQuery + " ?ground geo:long ?groundLongitude."
 
 	sparqlQuery = sparqlQuery + " }"
 	return sparqlQuery
