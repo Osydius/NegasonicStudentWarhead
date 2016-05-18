@@ -94,6 +94,17 @@ img{
   overflow-y: hidden;
 }
 
+/* for players profile on journalist page same as below */
+.dark-panel-vertical {
+  color:white;
+  background-color: #333333;
+  border-radius: 4px;
+  padding: 10px;
+  height: 500px;
+  width: 95%;
+  overflow-y: scroll;
+}
+
 /* for players on journalist page same as below */
 .dark-panel-no-scroll {
   color:white;
@@ -114,6 +125,14 @@ img{
   height: 200px;
   align-content: center;
   align-items: center;
+}
+
+.grey_tile{
+  background-color: #4d4d4d;
+  border-radius: 4px;
+  padding: 5px;
+  margin: 5px;
+  color: white;
 }
 
 /*sub headings on journalist page*/

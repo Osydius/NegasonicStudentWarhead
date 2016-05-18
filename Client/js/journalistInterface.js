@@ -185,11 +185,16 @@ function handleResponseFromServer(data){
         console.log(team)
 
         var teamContainer = document.createElement("div");
+
         var teamName = document.createElement("p");
+
         var abstractTitle = document.createElement("p");
         var abstractText = document.createElement("p");
         var playersTitle = document.createElement("p");
         var playersSlider = document.createElement("div");
+
+        var playerProfileContainer = document.createElement("div");
+
         var managerContainer = document.createElement("div");
         var managerTable = document.createElement("table");
         var managerRow = document.createElement("tr");
@@ -199,6 +204,7 @@ function handleResponseFromServer(data){
         var managerName = document.createElement("p");
         var managerImg = document.createElement("img");
         var managerText = document.createElement("p");
+
         var stadiumContainer = document.createElement("div");
         var stadiumTable = document.createElement("table");
         var stadiumRow = document.createElement("tr");
@@ -208,6 +214,7 @@ function handleResponseFromServer(data){
         var stadiumName = document.createElement("p");
         var stadiumImg = document.createElement("img");
         var stadiumText = document.createElement("p");
+
         var mapTitle = document.createElement("p");
         var mapText = document.createElement("p");
         var map = document.createElement("div");
@@ -230,6 +237,9 @@ function handleResponseFromServer(data){
         teamContainer.appendChild(playersSlider);
         teamContainer.appendChild(document.createElement("br"));
 
+        teamContainer.appendChild(playerProfileContainer);
+        teamContainer.appendChild(document.createElement("br")); 
+
         teamContainer.className="display_tile_shown";
         $(teamContainer).css("padding", "20px");
         teamContainer.setAttribute('about',team.club);
@@ -243,6 +253,8 @@ function handleResponseFromServer(data){
         $(playersTitle).html('Players:');
         playersTitle.className = "subheading";
         playersSlider.className ='dark-panel';
+        $(playerProfileContainer).css('display','none');
+        playerProfileContainer.id = "playerProfile"+j;
 
         for(var i=0; i<team.players.length; i++){
             //create player tile
@@ -285,8 +297,10 @@ function handleResponseFromServer(data){
             playerPosContainer.setAttribute('property','dbp:position');
             playerPos.setAttribute('property','rdfs:label');
 
-            $( document ).on( 'click', hashtagId, function() {
+            $(hashtagId).on( 'click', function(event) {
                //alert( 'WORKS! ' + jQuery(this).attr('about') );
+               var eventId = event.currentTarget.id
+               var teamNo = eventId.substring(eventId.length-1,eventId.length);
                playerData = {};
                playerData["player"] = jQuery(this).attr('about');
                data = JSON.stringify(playerData);
@@ -298,12 +312,15 @@ function handleResponseFromServer(data){
                     url: url+'getPlayerHistory.html',
                     data: data,
                     success: function (data) {
-                        console.log(data);
+                        console.log(data)
+                        displayPlayerProfile(data,teamNo);
                     },
                     error: function (xhr, status, error) {
                         console.log('Error: ' + error.message);
                     }
                 });
+
+                
             });
         }
 
@@ -390,6 +407,105 @@ function handleResponseFromServer(data){
     }
 
 
+}
+
+function displayPlayerProfile(data, teamNo){
+    var profileId = "playerProfile"+teamNo;
+    var profileContainer = document.getElementById(profileId);
+
+    //if it has any children the profile is currently showing a different player so clear this first
+    while (profileContainer.firstChild) {
+        profileContainer.removeChild(profileContainer.firstChild);
+    }
+
+    var playerProfileName = document.createElement("p");
+    var playerProfileFullName = document.createElement("p");
+    var playerProfileDOB = document.createElement("p");
+    var playerProfilePlaceOfBirth = document.createElement("p");
+    var playerProfilePosition = document.createElement("p");
+    var playerProfileImg = document.createElement("img");
+    var playerProfileHistoryContainer = document.createElement("div");
+    var playerProfileTable = document.createElement("table");
+    var playerProfileRow = document.createElement("tr");
+    var playerProfileColumn1 = document.createElement("td");
+    var playerProfileColumn2 = document.createElement("td");
+    var closeButton = document.createElement('input');
+    closeButton.setAttribute('type','button');
+    closeButton.setAttribute('name','Close Profile');
+    closeButton.setAttribute('value','Close Profile');
+    closeButton.id="closeProfile"+teamNo;
+    closeButton.onclick = closeProfile;
+
+    profileContainer.appendChild(playerProfileTable);
+    playerProfileTable.appendChild(playerProfileRow);
+    playerProfileRow.appendChild(playerProfileColumn1);
+    playerProfileRow.appendChild(playerProfileColumn2);
+    playerProfileColumn1.appendChild(playerProfileName);
+    playerProfileColumn1.appendChild(document.createElement("br"));
+    playerProfileColumn1.appendChild(playerProfileFullName);
+    playerProfileColumn1.appendChild(document.createElement("br"));
+    playerProfileColumn1.appendChild(playerProfileDOB);
+    playerProfileColumn1.appendChild(document.createElement("br"));
+    playerProfileColumn1.appendChild(playerProfilePlaceOfBirth);
+    playerProfileColumn1.appendChild(document.createElement("br"));
+    playerProfileColumn1.appendChild(playerProfilePosition);
+    playerProfileColumn1.appendChild(document.createElement("br"));
+    playerProfileColumn1.appendChild(document.createElement("br"));
+    playerProfileColumn1.appendChild(playerProfileImg);
+    playerProfileColumn1.appendChild(document.createElement("br"));
+    playerProfileColumn1.appendChild(document.createElement("br"));
+    playerProfileColumn1.appendChild(closeButton);
+    playerProfileColumn2.appendChild(playerProfileHistoryContainer);
+
+    $(playerProfileColumn1).css('width','30%');
+    $(playerProfileColumn1).css('vertical-align','text-top');
+    $(playerProfileName).html("Name: " +data.playerName.value);
+    $(playerProfileFullName).html("Full Name: " + data.playerFullname.value);
+    $(playerProfileDOB).html("DOB: " + data.playerDOB.value);
+    $(playerProfilePlaceOfBirth).html("Place of Birth: " + data.playerBirthPlaceName.value);
+    $(playerProfilePosition).html("Player Position (current): " + data.playerPositionLabel.value);
+    $(playerProfileImg).attr('src', data.playerThumbnail.value);
+    closeButton.className = "btn btn-custom";
+
+    //iterate through the career history and create a tile for each
+    for(var i=0; i< data.playerCareerStations.length; i++){
+        var careerTile = document.createElement("div");
+        var careerClubName = document.createElement("p");
+        var careerClubComment = document.createElement("p");
+        var careerYearStart = document.createElement("p");
+        var careerMatchCount = document.createElement("p");
+        var careerGoalCount = document.createElement("p");
+
+        playerProfileHistoryContainer.appendChild(careerTile);
+        careerTile.appendChild(careerClubName);
+        careerTile.appendChild(document.createElement("br"));
+        careerTile.appendChild(careerClubComment);
+        careerTile.appendChild(document.createElement("br"));
+        careerTile.appendChild(careerYearStart);
+        careerTile.appendChild(document.createElement("br"));
+        careerTile.appendChild(careerMatchCount);
+        careerTile.appendChild(careerGoalCount);
+
+        $(careerClubName).html(data.playerCareerStations[i].playerCareerStationTeamClubName.value);
+        $(careerClubComment).html(data.playerCareerStations[i].playerCareerStationTeamComment.value);
+        $(careerYearStart).html(data.playerCareerStations[i].playerCareerStationYears.value);
+        $(careerMatchCount).html("Matches: " + data.playerCareerStations[i].playerCareerStationMatches.value + "     ");
+        $(careerGoalCount).html("Goals: " +data.playerCareerStations[i].playerCareerStationGoals.value);
+
+        careerTile.className = "grey_tile";
+    }
+    playerProfileHistoryContainer.className = "dark-panel-vertical";
+
+    profileContainer.className = "dark-panel-no-scroll ";
+    profileContainer.style.width = "98%";
+    profileContainer.style.display="block";
+}
+
+function closeProfile(){
+    var eventId = event.currentTarget.id
+    var teamNo = eventId.substring(eventId.length-1,eventId.length);
+    var profileContainer = document.getElementById("playerProfile"+teamNo);
+    profileContainer.style.display="none";
 }
 
 
