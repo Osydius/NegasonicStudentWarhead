@@ -13,7 +13,7 @@ generateBriefing.onclick = buttonClick;
 * that triggered the call and hands control over to serializeObject()
 */
 function buttonClick() {
-    
+
     var form = $('#generate_briefing_form');
     JSON.stringify($('form').serializeObject());
 
@@ -268,7 +268,7 @@ function handleResponseFromServer(data){
             playerTile.appendChild(playerPosContainer);
             playerPosContainer.appendChild(playerPos);
             playerTile.appendChild(document.createElement("br"));
-            
+
             playerTile.className = "playertile";
             playerTile.id = id;
             playerTile.setAttribute('about',team.players[i].player.value);
@@ -287,7 +287,9 @@ function handleResponseFromServer(data){
 
             $( document ).on( 'click', hashtagId, function() {
                //alert( 'WORKS! ' + jQuery(this).attr('about') );
-               data = JSON.stringify(jQuery(this).attr('about'));
+               playerData = {};
+               playerData["player"] = jQuery(this).attr('about');
+               data = JSON.stringify(playerData);
                console.log(data)
                $.ajax({
                     dataType: 'json',
@@ -361,7 +363,7 @@ function handleResponseFromServer(data){
         $(managerImg).css('height','200px');
         $(managerImg).css('display', 'block-inline');
         $(managerText).html(team.clubManagerAbstract.value);
-        
+
         //stadiumContainer.className = "dark-panel-no-scroll";
         $(stadiumTitle).html('Stadium:');
         stadiumTitle.className = "subheading";

@@ -872,7 +872,8 @@ function getJournalistBrief(clientData, response){
 					newPlayer["player"] = allResults[i].players;
 					newPlayer["playerName"] = allResults[i]["callret-2"];
 					newPlayer["playerDOB"] = allResults[i].playerDateOfBirth;
-					newPlayer["playerPosition"] = allResults[i].playerPositionLabel;
+					newPlayer["playerPosition"] = allResults[i].playerPosition;
+					newPlayer["playerPositionLabel"] = allResults[i].playerPositionLabel;
 					newPlayer["playerThumbnail"] = allResults[i].playerThumbnail;
 					newPlayer["playerBirthPlace"] = allResults[i].playerBirthPlace;
 					newPlayer["playerBirthPlaceName"] = allResults[i].playerBirthPlaceName;
@@ -894,7 +895,7 @@ function getJournalistBrief(clientData, response){
 }
 
 function getPlayerHistory(clientData, response){
-	var player = clientData;
+	var player = clientData["player"];
 	var playerReturnResults = {};
 	DBPediaClient.query(sparqlFootballPlayerQuery(player)).execute(function(error, results){
 		if(results.results.bindings.length > 0){
