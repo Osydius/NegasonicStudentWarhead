@@ -400,10 +400,15 @@ function handleResponseFromServer(data){
         mapTitle.className="subheading";
         $(mapTitle).html('Team Map');
         $(mapText).html('The map below displays the birthplace of each player on the team.');
+        map.id = "teamMap"+j;
+        $(map).css('width', '100%');
+        $(map).css('height', '400px');
 
         teamContainer.appendChild(document.createElement("br"));
         teamContainer.appendChild(document.createElement("br"));
 
+        //set up the map
+        initializeMap(team.players, "teamMap"+j);
     }
 
 
@@ -508,34 +513,56 @@ function closeProfile(){
     profileContainer.style.display="none";
 }
 
+// Section 3: Google maps ----------------------------------------------------------------------------------------------------------------------
+/**
+* Creates a google map centered on the UK and places it on the screen. Iterates through all players on the
+* team and  displayes their birthplaces.
+* @param {Object} plyaers - An object containing all players
+* @param {String} mapId - the id of the map element to be initialized
+*/
+function initializeMap(players, mapId){
+    var myLatlng = new google.maps.LatLng(54.504682, -0.436730);
+    var mapOptions = {
+        zoom: 5,
+        center: myLatlng}
+    var map = new google.maps.Map(document.getElementById(mapId), mapOptions);
 
-// Section 3: JQuery Autocomplete plugin -----------------------------------------------------------------------------------------------------
+    for(i=0; i<players.length; i++){
+        generateMapMarker(players[i], map);
+    }
+
+
+
+}
+
+/**
+* Takes each player with geolocated birth place and the map and places markers at the appropriate places on the map.
+* @param {Object} player - a player object
+* @param {Var} map - the google map on the screen
+*/
+function generateMapMarker(player, map){
+    var lat = player.playerBirthPlaceLatitude.value;
+    var long = player.playerBirthPlaceLongitude.value;
+    var myLatlng = new google.maps.LatLng(lat, long);
+    var marker = new google.maps.Marker({
+        position: myLatlng,
+        map: map,
+        title:"Player Birth Place"});
+    var infowindow = new google.maps.InfoWindow({
+        content: player.playerName.value + "<br>" + "DOB: " +player.playerDOB.value +
+        "<br>" + "Place of Birth: " + "<br>" + "<img src = \"" + player.playerThumbnail.value + "\" height = \"30\">",
+        maxWidth:200 });
+    google.maps.event.addListener(marker, 'click', function() {
+    infowindow.open(map, marker);});
+}
+
+
+// Section 4: JQuery Autocomplete plugin -----------------------------------------------------------------------------------------------------
 /**
 * Listens to the team input fields and generates autocomplete suggestions as the user types.
 */
-/*$(document).ready(function() {
-    $.ajax({
-        type: 'GET',
-        url: 'http://localhost:3000/getClubs.html',
-        success: function (data) {
-            var clubs =[]
-            console.log(data)
-            for(i=0; i<data.length; i++){
-                clubs.push(data[i].name);
-            }
-            $( "#team1" ).autocomplete({
-                source: clubs
-            });
-            $( "#team2" ).autocomplete({
-                source: clubs
-            });
-        },
-        error: function (xhr, status, error) {
-            console.log('Error: ' + error.message);
-        }
-    });
-});
-*/
+
+
 $(document).ready(function() {
     $.ajax({
         type: 'GET',
