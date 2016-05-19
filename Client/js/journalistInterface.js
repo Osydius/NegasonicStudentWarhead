@@ -417,6 +417,8 @@ function handleResponseFromServer(data){
 function displayPlayerProfile(data, teamNo){
     var profileId = "playerProfile"+teamNo;
     var profileContainer = document.getElementById(profileId);
+    //profileContainer.setAttribute('about',data.playerResource.value);
+
 
     //if it has any children the profile is currently showing a different player so clear this first
     while (profileContainer.firstChild) {
@@ -426,7 +428,9 @@ function displayPlayerProfile(data, teamNo){
     var playerProfileName = document.createElement("p");
     var playerProfileFullName = document.createElement("p");
     var playerProfileDOB = document.createElement("p");
+    var playerProfilePlaceOfBirthDiv = document.createElement("div");
     var playerProfilePlaceOfBirth = document.createElement("p");
+    var playerProfilePositionDiv = document.createElement("div");
     var playerProfilePosition = document.createElement("p");
     var playerProfileImg = document.createElement("img");
     var playerProfileHistoryContainer = document.createElement("div");
@@ -451,9 +455,11 @@ function displayPlayerProfile(data, teamNo){
     playerProfileColumn1.appendChild(document.createElement("br"));
     playerProfileColumn1.appendChild(playerProfileDOB);
     playerProfileColumn1.appendChild(document.createElement("br"));
-    playerProfileColumn1.appendChild(playerProfilePlaceOfBirth);
+    playerProfileColumn1.appendChild(playerProfilePlaceOfBirthDiv);
+    playerProfilePlaceOfBirthDiv.appendChild(playerProfilePlaceOfBirth);
     playerProfileColumn1.appendChild(document.createElement("br"));
-    playerProfileColumn1.appendChild(playerProfilePosition);
+    playerProfileColumn1.appendChild(playerProfilePositionDiv);
+    playerProfilePositionDiv.appendChild(playerProfilePosition);
     playerProfileColumn1.appendChild(document.createElement("br"));
     playerProfileColumn1.appendChild(document.createElement("br"));
     playerProfileColumn1.appendChild(playerProfileImg);
@@ -472,9 +478,21 @@ function displayPlayerProfile(data, teamNo){
     $(playerProfileImg).attr('src', data.playerThumbnail.value);
     closeButton.className = "btn btn-custom";
 
+    playerProfileName.setAttribute('property','dbp:name');
+    playerProfileFullName.setAttribute('property', 'dbp:fullname');
+    playerProfileDOB.setAttribute('property', 'dbp:dateOfBirth');
+    playerProfilePlaceOfBirthDiv.setAttribute('property', 'dbo:birthPlace');
+    playerProfilePlaceOfBirthDiv.setAttribute('about', data.playerBirthPlace.value);
+    playerProfilePlaceOfBirth.setAttribute('property', 'rdfs:label');
+    playerProfilePositionDiv.setAttribute('property', 'dbo:position');
+    playerProfilePositionDiv.setAttribute('about', data.playerPosition.value);
+    playerProfilePosition.setAttribute('property','rdfs:label');
+    playerProfileImg.setAttribute('property', 'dbo:thumbnail');
+
     //iterate through the career history and create a tile for each
     for(var i=0; i< data.playerCareerStations.length; i++){
         var careerTile = document.createElement("div");
+        var careerClubDiv = document.createElement("div");
         var careerClubName = document.createElement("p");
         var careerClubComment = document.createElement("p");
         var careerYearStart = document.createElement("p");
@@ -482,9 +500,10 @@ function displayPlayerProfile(data, teamNo){
         var careerGoalCount = document.createElement("p");
 
         playerProfileHistoryContainer.appendChild(careerTile);
-        careerTile.appendChild(careerClubName);
-        careerTile.appendChild(document.createElement("br"));
-        careerTile.appendChild(careerClubComment);
+        careerTile.appendChild(careerClubDiv);
+        careerClubDiv.appendChild(careerClubName);
+        careerClubDiv.appendChild(document.createElement("br"));
+        careerClubDiv.appendChild(careerClubComment);
         careerTile.appendChild(document.createElement("br"));
         careerTile.appendChild(careerYearStart);
         careerTile.appendChild(document.createElement("br"));
@@ -498,6 +517,16 @@ function displayPlayerProfile(data, teamNo){
         $(careerGoalCount).html("Goals: " +data.playerCareerStations[i].playerCareerStationGoals.value);
 
         careerTile.className = "grey_tile";
+
+        careerTile.setAttribute('property', "dbo:careerStation");
+        careerTile.setAttribute('about', data.playerCareerStations[i].playerCareerStation.value);
+        careerClubDiv.setAttribute('property', 'dbo:team');
+        careerClubDiv.setAttribute('about', data.playerCareerStations[i].playerCareerStationTeam.value);
+        careerClubName.setAttribute('property', 'rdfs:label');
+        careerClubComment.setAttribute('property', 'rdfs:comment');
+        careerYearStart.setAttribute('property','dbo:years');
+        careerMatchCount.setAttribute('property', 'dbo:numberOfMatches');
+        careerGoalCount.setAttribute('property', 'dbo:numberOfGoals');
     }
     playerProfileHistoryContainer.className = "dark-panel-vertical";
 
@@ -561,8 +590,6 @@ function generateMapMarker(player, map){
 /**
 * Listens to the team input fields and generates autocomplete suggestions as the user types.
 */
-
-
 $(document).ready(function() {
     $.ajax({
         type: 'GET',
