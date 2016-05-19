@@ -1,5 +1,4 @@
 //
-
 // Authors: James Hall and Nicola Willis
 // Team: NegasonicStudentWarhead
 //
@@ -13,10 +12,8 @@ generateBriefing.onclick = buttonClick;
 * that triggered the call and hands control over to serializeObject()
 */
 function buttonClick() {
-
     var form = $('#generate_briefing_form');
     JSON.stringify($('form').serializeObject());
-
     return false;
 }
 
@@ -43,9 +40,13 @@ $.fn.serializeObject = function () {
         validateInput(o);
     };
 
-
+/**
+ * Begins the validation process on user input. Checks that the date that the user has entered
+ * is valid and not in the past. If date validation fails alerts user, otherwise hands control
+ * to next stage of validation.
+ * @param {Object} userInput - the input that the user has entered into the form
+ */
 function validateInput(userInput){
-	//check that the date isn't in past
 	//convert entered string into a date
     var dateInput = userInput.date[0].trim()
     var parts = null;
@@ -63,7 +64,6 @@ function validateInput(userInput){
     }
 	//check that date isn't in the past
 	var now = new Date();
-    console.log(enteredDate);
 	if(enteredDate < now || enteredDate == "Invalid Date"){
 		alert("You must enter a valid date that is in the future");
         return false;
@@ -73,53 +73,32 @@ function validateInput(userInput){
 	validateTeamInput(userInput);
 }
 
+/*
+ * Takes the input from the user and checks that two teams have been entered and that they are not 
+ * the same. Notifies the user if validation fails at this point otherwise calls a function to
+ * continue the validation process.
+ * @param {Object} userInput - the input that the user has entered into the form
+ */
 function validateTeamInput(userInput) {
-    //make a call to retrieve the relevant data from database if it exists.
     if (JSON.stringify(userInput.team1).length <= 4 || JSON.stringify(userInput.team2).length <= 4){
         //two teams were not entered so validation fail
         alert("Team validation failed\nYou must enter two teams");
     } else if(JSON.stringify(userInput.team1) == JSON.stringify(userInput.team2)){
         alert("Team validation failed\nEntered teams cannot be the same");
     }else {
-        //a team has been entered so check that they both exist in the database
+        //two different teams have been entered so check that they both exist in the database
         fetchClubTwitterHandle(userInput,JSON.stringify(userInput.team1));
     }
     return false;
 }
 
-function sendDataToServer(userInput){
-    //all validations have passed
-    $('.swirly').css('display','block');
-    url = 'http://localhost:3000/';
-    //data = JSON.stringify(userInput);
-    //$('#team1_id').val()
-
-    data = JSON.stringify({"date": userInput.date, "team1": $('#team1_id').val(), "team2": $('#team2_id').val()});
-    $.ajax({
-        dataType: 'json',
-        contentType: "application/json",
-        type: 'POST',
-        url: url+'journalistBrief.html',
-        data: data,
-        success: function (data) {
-            $('.swirly').css('display','none');
-            handleResponseFromServer(data);
-        },
-        error: function (xhr, status, error) {
-            $('.swirly').css('display','none');
-            console.log('Error: ' + error.message);
-
-        }
-    });
-    return false;
-}
-
 /**
-* Sends an AJAX call that attempts to retrieve the relevant twitter handle for the entered
-* team if it exists.
+* Sends an AJAX call that attempts to retrieve the relevant twitter handle for the first entered team if it
+* exists in the database, if this fails alert the user otherwise send another AJAX call that attempts to 
+* retrieve the relevant twitter handle for the second entered team. If this succeeds hand control to next
+* function.
 * @param {Object} userInput - the input that the user has entered into the form
 * @param {Array} data - the data collected from the database, will either be empty or contain handle
-* @param {String} eventId - the id of the button that was pressed
 */
 function fetchClubTwitterHandle(userInput,data){
     $.ajax({
@@ -163,26 +142,49 @@ function fetchClubTwitterHandle(userInput,data){
     });
 }
 
+/**
+* Should only be called if all user validations have passed. Sends user input to the server in an AJAX call to retrieve
+* the relevant information required to generate a journalist briefing.
+* @param {Object} userInput - the input that the user has entered into the form
+*/
+function sendDataToServer(userInput){
+    $('.swirly').css('display','block');
+    url = 'http://localhost:3000/';
 
+    data = JSON.stringify({"date": userInput.date, "team1": $('#team1_id').val(), "team2": $('#team2_id').val()});
+    $.ajax({
+        dataType: 'json',
+        contentType: "application/json",
+        type: 'POST',
+        url: url+'journalistBrief.html',
+        data: data,
+        success: function (data) {
+            $('.swirly').css('display','none');
+            handleResponseFromServer(data);
+        },
+        error: function (xhr, status, error) {
+            $('.swirly').css('display','none');
+            console.log('Error: ' + error.message);
 
-
-
+        }
+    });
+    return false;
+}
 
 // Section 2: Handle the response that is sent back from the server to get stuff for display ---------------------------------------------------------------------------------------------------
 
+/**
+* Iterates through all of the information retrieved from the server in order to generate the journalist briefing dispay.
+* For each team generates a tile on the page that contains information about the team such as its manager and stadium as
+* well as a full list of its players with their positions. Makes each player clickable so that an expanded profile for the 
+* player can be seen. Initializes a google map for each team.
+* @param {Object} data - the response from the server
+*/
 function handleResponseFromServer(data){
-    //for each team
-    //name
-    //description
-    //players slider
-    //manager
-    //stadium
     var j = 0;
     for(var key in data){
         j=j+1;
         var team = data[key]
-        console.log(key)
-        console.log(team)
 
         var teamContainer = document.createElement("div");
 
@@ -256,11 +258,8 @@ function handleResponseFromServer(data){
         $(playerProfileContainer).css('display','none');
         playerProfileContainer.id = "playerProfile"+j;
 
+        //for each player create a tile in the player slider
         for(var i=0; i<team.players.length; i++){
-            //create player tile
-            //put info in tile
-            //append to slider
-
             var playerTile = document.createElement("div");
             var playerImg = document.createElement("img");
             var playerName = document.createElement("p");
@@ -297,6 +296,8 @@ function handleResponseFromServer(data){
             playerPosContainer.setAttribute('property','dbp:position');
             playerPos.setAttribute('property','rdfs:label');
 
+            //make each player tile clickable so that clicking a tile will open the profile 
+            //window for that player
             $(hashtagId).on( 'click', function(event) {
                //alert( 'WORKS! ' + jQuery(this).attr('about') );
                var eventId = event.currentTarget.id
@@ -319,8 +320,6 @@ function handleResponseFromServer(data){
                         console.log('Error: ' + error.message);
                     }
                 });
-
-                
             });
         }
 
@@ -381,7 +380,6 @@ function handleResponseFromServer(data){
         $(managerImg).css('display', 'block-inline');
         $(managerText).html(team.clubManagerAbstract.value);
 
-        //stadiumContainer.className = "dark-panel-no-scroll";
         $(stadiumTitle).html('Stadium:');
         stadiumTitle.className = "subheading";
         $(stadiumColumn1).css('width','30%');
@@ -410,14 +408,19 @@ function handleResponseFromServer(data){
         //set up the map
         initializeMap(team.players, "teamMap"+j);
     }
-
-
 }
 
+/**
+* Called when a player tile on the players slider is pressed. Populates and displays the player profile pane.
+* If a player profile is already displayed then clear this before populating it with the new information.
+* Information will include player name and birth information, their picture and their career history.
+* @param {Object} data - the response from the server request to get player profile information
+* @param {Int} teamNo - the number of the team that this player profile should be displayed on (either 1 or 2)
+*/
 function displayPlayerProfile(data, teamNo){
     var profileId = "playerProfile"+teamNo;
     var profileContainer = document.getElementById(profileId);
-    //profileContainer.setAttribute('about',data.playerResource.value);
+    profileContainer.setAttribute('about',data.player.value);
 
 
     //if it has any children the profile is currently showing a different player so clear this first
@@ -535,6 +538,10 @@ function displayPlayerProfile(data, teamNo){
     profileContainer.style.display="block";
 }
 
+/**
+* Called if the close profile button on the player profile is pressed. Hides the player
+* Profile pane.
+*/
 function closeProfile(){
     var eventId = event.currentTarget.id
     var teamNo = eventId.substring(eventId.length-1,eventId.length);
@@ -559,9 +566,6 @@ function initializeMap(players, mapId){
     for(i=0; i<players.length; i++){
         generateMapMarker(players[i], map);
     }
-
-
-
 }
 
 /**
@@ -588,7 +592,8 @@ function generateMapMarker(player, map){
 
 // Section 4: JQuery Autocomplete plugin -----------------------------------------------------------------------------------------------------
 /**
-* Listens to the team input fields and generates autocomplete suggestions as the user types.
+* Listens to the team input fields and generates autocomplete suggestions as the user types. Each input field displays
+* team names but also creates a raw dbpedia link to be sent to the server which is hidden from the user.
 */
 $(document).ready(function() {
     $.ajax({

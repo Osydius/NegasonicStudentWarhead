@@ -36,7 +36,7 @@ img{
   clear:both;
 }
 
-/* Form and title bar at the top of the page */
+/* Forms and title bars at the top of each page */
 #title_bar {
   background-color: #004d1a;
   color:white;
@@ -52,7 +52,7 @@ img{
   margin:0px;
 }
 
-/* Gold, Silver, Bronze place styles, used in statistics displays */
+/* Gold, Silver, Bronze place styles, used in statistics displays on twitter query page */
 .place0{
   color: #BAB407;
   font-size: 120%;
@@ -81,7 +81,7 @@ img{
   color: white;
 }
 
-/* for players on journalist page same as below */
+/* X-scroll dark panel for the players slider on the journalist page */
 .dark-panel {
   color:white;
   background-color: #333333;
@@ -94,7 +94,7 @@ img{
   overflow-y: hidden;
 }
 
-/* for players profile on journalist page same as below */
+/* Y-scroll dark panel for the career history on the player profile on the journalist page */
 .dark-panel-vertical {
   color:white;
   background-color: #333333;
@@ -105,7 +105,7 @@ img{
   overflow-y: scroll;
 }
 
-/* for players on journalist page same as below */
+/* Generic dark panel with no scrolling */
 .dark-panel-no-scroll {
   color:white;
   background-color: #333333;
@@ -115,7 +115,7 @@ img{
   height: auto;
 }
 
-/* also used for players on journalist page */
+/* Light grey tile used to display player info */
 .playertile{
   background-color: #4d4d4d;
   border-radius: 4px;
@@ -127,6 +127,7 @@ img{
   align-items: center;
 }
 
+/* Light grey tile no set size */
 .grey_tile{
   background-color: #4d4d4d;
   border-radius: 4px;
@@ -135,11 +136,12 @@ img{
   color: white;
 }
 
-/*sub headings on journalist page*/
+/* Sub-headings on journalist page*/
 .subheading{
   font-size:130%;
 }
 
+/* Player image style on player tiles on journalist page */
 .playerImg{
   display: block;
   margin-left: auto;
@@ -162,7 +164,6 @@ img{
   height: 401px;
 }
 
-/* also used for players on journalist page */
 .usertile{
   background-color: #4d4d4d;
   border-radius: 4px;
@@ -191,6 +192,7 @@ img{
   margin-right: auto;
 }
 
+/* Basic white display tile with default display none or block */
 .display_tile {
   background-color: white;
   border-radius: 4px;
