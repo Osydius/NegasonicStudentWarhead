@@ -268,6 +268,7 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets, data
 							}
 						}
 						//The following log returns all the tweets found so that they can be recorded.
+						console.log(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 		    		response.end(returnedTweets);
@@ -298,9 +299,10 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets, data
 							}
 						}
 						//The following log returns all the tweets found so that they can be recorded.
+						console.log(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
-		    			response.end(returnedTweets);
+	    			response.end(returnedTweets);
 					}
 				} else {
 					console.log("no statuses found");
@@ -944,6 +946,7 @@ function getPlayerHistory(clientData, response){
 	DBPediaClient.query(sparqlFootballPlayerQuery(player)).execute(function(error, results){
 		if(results.results.bindings.length > 0){
 			allResults = results.results.bindings;
+			playerReturnResults["player"] = player;
 			playerReturnResults["playerName"] = allResults[0]["callret-0"];
 			playerReturnResults["playerFullname"] = allResults[0]["callret-1"];
 			playerReturnResults["playerPosition"] = allResults[0].playerPosition;
@@ -1034,6 +1037,7 @@ function sparqlFootballClubQuery(teamDBPediaPage){
 	sparqlQuery = sparqlQuery + " ?players dbo:birthDate ?playerDateOfBirth."
 	sparqlQuery = sparqlQuery + " ?players dbo:thumbnail ?playerThumbnail."
 	sparqlQuery = sparqlQuery + " ?players dbo:birthPlace ?playerBirthPlace."
+	sparqlQuery = sparqlQuery + " VALUES ?playerBirthPlaceType {<http://dbpedia.org/ontology/Settlement>} ?playerBirthPlace a ?playerBirthPlaceType."
 
 	sparqlQuery = sparqlQuery + " ?playerBirthPlace rdfs:label ?playerBirthPlaceName FILTER langMatches(lang(?playerBirthPlaceName),'en')."
 	sparqlQuery = sparqlQuery + " ?playerBirthPlace geo:lat ?playerBirthPlaceLatitude."
