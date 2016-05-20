@@ -18,7 +18,6 @@ var SparqlClient = require('sparql-client')
 var util = require('util');
 var url = require('url');
 var querystring = require('querystring');
-var weather = require('openweather-node');
 
 var config = require('./config.js');
 
@@ -30,10 +29,6 @@ mySqlConnection.connect();
 
 var DBPediaEndpoint = 'http://dbpedia.org/sparql';
 var DBPediaClient = new SparqlClient(DBPediaEndpoint);
-
-weather.setAPPID(config.openWeather);
-weather.setCulture("en");
-weather.setForecastType("daily");
 
 //Initialise server information
 var fileServer = new (static.Server)();
@@ -268,7 +263,6 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets, data
 							}
 						}
 						//The following log returns all the tweets found so that they can be recorded.
-						console.log(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 		    		response.end(returnedTweets);
@@ -299,7 +293,6 @@ function queryTwitter(query, response, totalTweets, lastId, returnedTweets, data
 							}
 						}
 						//The following log returns all the tweets found so that they can be recorded.
-						console.log(returnedTweets);
 						returnedTweets= JSON.stringify(returnedTweets);
 						response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 	    			response.end(returnedTweets);
@@ -368,7 +361,7 @@ function getFootballClubs(response){
 * @param {object} response - The response object used to return the result to the user.
 */
 function findClubTwitterHandle(data, response){
-	mySqlConnection.query("SELECT footballClubTwitterHandle FROM footballClubs WHERE footballClubName = ?", [data], function(error, result){
+	mySqlConnection.query("SELECT footballClubTwitterHandle FROM footballclubs WHERE footballClubName = ?", [data[0]], function(error, result){
 		returnClubTwitterHandle = JSON.stringify(result);
 		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 		response.end(returnClubTwitterHandle);
@@ -599,7 +592,7 @@ function newTwitterHashtags(tweetInfo, tweetId){
 /*
 * This function is designed to create the link between hashtags associated with a tweet and a tweet.
 * The start and end point are provided so that the text in the tweet can be replaced when displayed for a user.
-* @param {integer} tweetId - The ID of the tweet that the user mentions are associated with so that they can be linked.
+* @param {integer} tweetId - The ID of the tweet that the hashtags are associated with so that they can be linked.
 * @param {integer} hashtagId - The ID of the hashtag that the tweet uses.
 * @param {integer} startPoint - The starting position where the hashtag is used.
 * @param {integer} endPoint - The end position where the hashtag is used.
@@ -641,9 +634,9 @@ function newTwitterUrls(tweetInfo, tweetId){
 }
 
 /*
-* This function is designed to create the link between hashtags associated with a tweet and a tweet.
+* This function is designed to create the link between urls associated with a tweet and a tweet.
 * The start and end point are provided so that the text in the tweet can be replaced when displayed for a user.
-* @param {integer} tweetId - The ID of the tweet that the user mentions are associated with so that they can be linked.
+* @param {integer} tweetId - The ID of the tweet that the urls are associated with so that they can be linked.
 * @param {integer} hashtagId - The ID of the url that the tweet uses.
 * @param {integer} startPoint - The starting position where the url is used.
 * @param {integer} endPoint - The end position where the url is used.
@@ -655,6 +648,12 @@ function newTweetTwitterUrl(tweetId, urlId, startPoint, endPoint){
 	});
 }
 
+/*
+* This loops through all the images and video in the current tweet and adds them to the database. It checks to see if each media that has been
+* used already exists in the database, if not then it adds the media and then creates a link between the tweet and the media.
+* @param {object} tweetInfo - An object that contains all the information about the tweet currently being added to the database.
+* @param {integer} tweetId - The ID of the tweet that the media is associated with so that they can be linked.
+*/
 function newTwitterMedia(tweetInfo, tweetId){
 	for(var i=0; i <tweetInfo.entities.media.length; i++){
 		var currentMedia = tweetInfo.entities.media[i];
@@ -678,6 +677,14 @@ function newTwitterMedia(tweetInfo, tweetId){
 	}
 }
 
+/*
+* This function is designed to create the link between media associated with a tweet and a tweet.
+* The start and end point are provided so that the text in the tweet can be replaced when displayed for a user.
+* @param {integer} tweetId - The ID of the tweet that the media is associated with so that they can be linked.
+* @param {integer} mediaId - The ID of the media that the tweet uses.
+* @param {integer} startPoint - The starting position where the media is used.
+* @param {integer} endPoint - The end position where the media is used.
+*/
 function newTweetTwitterMedia(tweetId, mediaId, startPoint, endPoint){
 	var newTweetTwitterMediaInfo = {tweetTwitterMediaTweetId: tweetId, tweetTwitterMediaTwitterMediaId: mediaId, tweetTwitterMediaStartPoint: startPoint, tweetTwitterMediaEndPoint: endPoint};
 	mySqlConnection.query("INSERT INTO tweettwittermedias SET ?", newTweetTwitterMediaInfo, function(error, result){
@@ -692,6 +699,7 @@ function newTweetTwitterMedia(tweetId, mediaId, startPoint, endPoint){
 * @param {object} queryData - An object that stores the query data. Contains the team name, potential players, potential hashtags
 *                             and potential keywords that will be used in the query.
 * @param {object} response - A response object that will be used to return the results once they have been found.
+* @param {boolean} onlyDatabase - A boolean that represents if only the database will be queried or twitter will be as well.
 */
 function getAllDatabaseTweets(queryData, response, onlyDatabase){
 	var currentResults = [];
@@ -720,6 +728,15 @@ function getAllDatabaseTweets(queryData, response, onlyDatabase){
 	});
 }
 
+/*
+* This function starts to get any the tweets from the database using the query data provided by the user.
+* It starts by getting all the users that are associated with the query and then passes it to another function that deals with
+* getting the actual tweets.
+* @param {object} queryData - An object that stores the query data. Contains the team name, potential players, potential hashtags
+*                             and potential keywords that will be used in the query.
+* @param {object} response - A response object that will be used to return the results once they have been found.
+* @param {boolean} onlyDatabase - A boolean that represents if only the database will be queried or twitter will be as well.
+*/
 function getAnyDatabaseTweets(queryData, response, onlyDatabase){
 	var currentResults = [];
 	mySqlConnection.query('SELECT * FROM twitterusers WHERE twitterUserScreenName = ?', [queryData.team], function(error, result){
@@ -750,15 +767,16 @@ function getAnyDatabaseTweets(queryData, response, onlyDatabase){
 /*
 * This function currently finds all the tweets in the database recusively that are associated with the users provided.
 * It then checks to see if the tweets are relevant by checking to see if they contain the hashtags or keywords.
-* @param {object} - An object that stores the query data. Contains the team name, potential players, potential hashtags
+* @param {object} queryData - An object that stores the query data. Contains the team name, potential players, potential hashtags
 *                             and potential keywords that will be used in the query.
-* @param {response} - A response object that will be used to return the results once they have been found.
+* @param {object} response- A response object that will be used to return the results once they have been found.
 * @param {array} tweetUserIds - An array of user IDs that tweets need to be associated with.
 * @param {integer} currentSearch - The index of the current user ID that is being searched with.
 * @param {array} currentResults - An array containing all of the results of the database query up to this point.
 * @param {object} userInfo - An object that contains the user information for the first user that has been found. This reduces
 *                            the need to use repeated information if duplicates are created.
 * @param {string} queryType - The type of query that is currently being used 'any' or 'all'.
+* @param {boolean} onlyDatabase - A boolean that represents if only the database will be queried or twitter will be as well.
 */
 function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch, currentResults, userInfo, queryType, onlyDatabase){
 	mySqlConnection.query('SELECT * FROM tweets WHERE twitterUserId = ?', [tweetUserIds[currentSearch]], function(error, result){
@@ -842,15 +860,25 @@ function getDatabaseQueryTweets(queryData, response, tweetUserIds, currentSearch
 	});
 }
 
+/*
+* This function is designed to collect data about two teams that are planned to have a match on a data.
+* It uses DBPedia as a source of data and gets relevant information about the teams, the players in each team as well as
+* information on the manager of the club and the ground they could be playing at.
+* @param {object} clientData - The data that the client has sent to the server. Contains a date and each team's DBPEdia
+*                              resource.
+* @param {object} response - A response object that will be used to return the results once they have been found.
+*/
 function getJournalistBrief(clientData, response){
 	var queryDate = clientData["date"][0];
 	var queryTeam1 = clientData["team1"];
 	var queryTeam2 = clientData["team2"];
 	var returnResults = {}
+
+	// Get results for the first team
 	DBPediaClient.query(sparqlFootballClubQuery(queryTeam1)).execute(function(error, results){
 		var team1ReturnResults = {}
 		if(results.results.bindings.length > 0){
-			//There are results
+			//Collate the general information about the team.
 			allResults = results.results.bindings;
 			team1ReturnResults["club"] = queryTeam1;
 			team1ReturnResults["clubName"] = allResults[0]["callret-0"];
@@ -866,6 +894,7 @@ function getJournalistBrief(clientData, response){
 			team1ReturnResults["clubGroundLatitude"] = allResults[0].groundLatitude;
 			team1ReturnResults["clubGroundLongitude"] = allResults[0].groundLongitude;
 
+			// Collate the information about each player for the team.
 			var returnPlayers = [];
 			for(var i=0;i<allResults.length;i++){
 				var newPlayer = {};
@@ -884,19 +913,16 @@ function getJournalistBrief(clientData, response){
 			}
 
 			team1ReturnResults["players"] = returnPlayers;
-
-			weather.now([[team1ReturnResults["clubGroundLatitude"].value, team1ReturnResults["clubGroundLongitude"].value]] , function(error, results){
-				//console.log(results[0].values);
-			});
 		} else {
 			team1ReturnResults = null;
 		}
 		returnResults["team1"] = team1ReturnResults;
 
+		// Get results for the second team
 		DBPediaClient.query(sparqlFootballClubQuery(queryTeam2)).execute(function(error, results){
 			var team2ReturnResults = {}
 			if(results.results.bindings.length > 0){
-				//There are results
+				//Collate the general information about the second team
 				allResults = results.results.bindings;
 				team2ReturnResults["club"] = queryTeam2;
 				team2ReturnResults["clubName"] = allResults[0]["callret-0"];
@@ -912,6 +938,7 @@ function getJournalistBrief(clientData, response){
 				team2ReturnResults["clubGroundLatitude"] = allResults[0].groundLatitude;
 				team2ReturnResults["clubGroundLongitude"] = allResults[0].groundLongitude;
 
+				// Collate the information about each player in the second team.
 				var returnPlayers = [];
 				for(var i=0;i<allResults.length;i++){
 					var newPlayer = {};
@@ -933,6 +960,8 @@ function getJournalistBrief(clientData, response){
 			} else {
 				team2ReturnResults = null;
 			}
+
+			// Return the results of both teams to the client. If no results were found for a team then it will return null.
 			returnResults["team2"] = team2ReturnResults;
 			response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 			response.end(JSON.stringify(returnResults));
@@ -940,11 +969,22 @@ function getJournalistBrief(clientData, response){
 	});
 }
 
+/*
+* This function is designed to collect data about an individual player. It attempts to find the career of the player,
+* collecting information about the teams they have played for and some statistics about their play time. It also finds
+* data about their birth place and the position they play in.
+* @param {object} clientData - The data that the client has sent to the server. Contains the DBPedia resource for a
+*                              specific player.
+* @param {object} response - A response object that will be used to return the results once they have been found.
+*/
 function getPlayerHistory(clientData, response){
 	var player = clientData["player"];
 	var playerReturnResults = {};
+
+	// Start the player query.
 	DBPediaClient.query(sparqlFootballPlayerQuery(player)).execute(function(error, results){
 		if(results.results.bindings.length > 0){
+			// Collate the general information about a player.
 			allResults = results.results.bindings;
 			playerReturnResults["player"] = player;
 			playerReturnResults["playerName"] = allResults[0]["callret-0"];
@@ -960,6 +1000,7 @@ function getPlayerHistory(clientData, response){
 			playerReturnResults["playerBirthPlaceLongitude"] = allResults[0].playerBirthPlaceLatitude;
 			playerReturnResults["playerAbstract"] = allResults[0].playerAbstract;
 
+			// Collate the information about each stage of the player's career.
 			var returnCareerStations = [];
 			for(var i=0;i<allResults.length;i++){
 				var newCareerStation = {};
@@ -979,6 +1020,7 @@ function getPlayerHistory(clientData, response){
 			playerReturnResults = null;
 		}
 
+		// Return the results to the client. If no results are found then null is returned.
 		response.writeHead(200, {"Content-Type": "application/json", 'Access-Control-Allow-Origin': '*'});
 		response.end(JSON.stringify(playerReturnResults));
 	});
@@ -1003,7 +1045,14 @@ function gracefulShutdown(){
 	}, 1*1000);
 }
 
+/*
+* This function generates a SPARQL query string for use when quering DBPedia. It collects and filters specific data that
+* has been selected as most relevant by the developer.
+* @param {String} teamDBPediaPage - The DBPedia resource of the team currently being queried, provided as a string.
+* @return {String} sparqlQuery - The query string that will be used for a SPARQL query.
+*/
 function sparqlFootballClubQuery(teamDBPediaPage){
+	// Creating the query header.
 	sparqlQuery = "SELECT MIN((?clubName) as ?clubName)"
 	sparqlQuery = sparqlQuery + " ?abstract"
 	sparqlQuery = sparqlQuery + " MIN((?playerName) as ?playerName)"
@@ -1026,12 +1075,16 @@ function sparqlFootballClubQuery(teamDBPediaPage){
 	sparqlQuery = sparqlQuery + " MIN((?playerBirthPlaceName) as ?playerBirthPlaceName)"
 	sparqlQuery = sparqlQuery + " ?playerBirthPlaceLatitude"
 	sparqlQuery = sparqlQuery + " ?playerBirthPlaceLongitude"
+
+	// The data source
 	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
+	// Get general club data and the players.
 	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:clubname ?clubName FILTER langMatches(lang(?clubName),'en')."
 	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbo:abstract ?abstract FILTER langMatches(lang(?abstract),'en')."
 	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:name ?players."
 
+	// Get player data
 	sparqlQuery = sparqlQuery + " ?players dbp:name ?playerName FILTER langMatches(lang(?playerName),'en')."
 	sparqlQuery = sparqlQuery + " ?players dbp:position ?playerPosition."
 	sparqlQuery = sparqlQuery + " ?players dbo:birthDate ?playerDateOfBirth."
@@ -1039,17 +1092,21 @@ function sparqlFootballClubQuery(teamDBPediaPage){
 	sparqlQuery = sparqlQuery + " ?players dbo:birthPlace ?playerBirthPlace."
 	sparqlQuery = sparqlQuery + " VALUES ?playerBirthPlaceType {<http://dbpedia.org/ontology/Settlement>} ?playerBirthPlace a ?playerBirthPlaceType."
 
+	// Get player birth place data.
 	sparqlQuery = sparqlQuery + " ?playerBirthPlace rdfs:label ?playerBirthPlaceName FILTER langMatches(lang(?playerBirthPlaceName),'en')."
 	sparqlQuery = sparqlQuery + " ?playerBirthPlace geo:lat ?playerBirthPlaceLatitude."
 	sparqlQuery = sparqlQuery + " ?playerBirthPlace geo:long ?playerBirthPlaceLongitude."
 
+	// Get player position data
 	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
 
+	// Get team manager data.
 	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:manager ?manager."
 	sparqlQuery = sparqlQuery + " ?manager dbp:name ?managerName FILTER langMatches(lang(?managerName),'en')."
 	sparqlQuery = sparqlQuery + " ?manager dbo:abstract ?managerAbstract FILTER langMatches(lang(?managerAbstract),'en')."
 	sparqlQuery = sparqlQuery + " ?manager dbo:thumbnail ?managerThumbnail."
 
+	// Get team ground information
 	sparqlQuery = sparqlQuery + " <" + teamDBPediaPage + "> dbp:ground ?ground."
 	sparqlQuery = sparqlQuery + " ?ground dbp:name ?groundName FILTER langMatches(lang(?groundName),'en')."
 	sparqlQuery = sparqlQuery + " ?ground dbo:abstract ?groundAbstract FILTER langMatches(lang(?groundAbstract),'en')."
@@ -1061,7 +1118,14 @@ function sparqlFootballClubQuery(teamDBPediaPage){
 	return sparqlQuery
 }
 
+/*
+* This function generates a SPARQL query string for use when quering DBPedia. It collects and filters specific data that
+* has been selected as most relevant by the developer.
+* @param {String} teamDBPediaPage - The DBPedia resource of the team currently being queried, provided as a string.
+* @return {String} sparqlQuery - The query string that will be used for a SPARQL query.
+*/
 function sparqlFootballPlayerQuery(playerDBPediaPage){
+	// Creating the query header.
 	sparqlQuery = "SELECT MIN((?playerName) as ?playerName)"
 	sparqlQuery = sparqlQuery + " MIN((?playerFullName) as ?playerFullName)"
 	sparqlQuery = sparqlQuery + " ?playerPosition"
@@ -1083,6 +1147,7 @@ function sparqlFootballPlayerQuery(playerDBPediaPage){
 	sparqlQuery = sparqlQuery + " ?playerCareerStationTeamComment"
 	sparqlQuery = sparqlQuery + " FROM <http://dbpedia.org> WHERE {"
 
+	// Get general information about a player.
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:name ?playerName FILTER langMatches(lang(?playerName),'en')."
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbp:fullname ?playerFullName FILTER langMatches(lang(?playerFullName),'en')."
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:position ?playerPosition."
@@ -1091,21 +1156,26 @@ function sparqlFootballPlayerQuery(playerDBPediaPage){
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:birthPlace ?playerBirthPlace."
 	sparqlQuery = sparqlQuery + " VALUES ?playerBirthPlaceType {<http://dbpedia.org/ontology/Settlement>} ?playerBirthPlace a ?playerBirthPlaceType."
 
+	// Get player position data.
 	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:label ?playerPositionLabel FILTER langMatches(lang(?playerPositionLabel),'en')."
 	sparqlQuery = sparqlQuery + " ?playerPosition rdfs:comment ?playerPositionComment FILTER langMatches(lang(?playerPositionComment),'en')."
 
+	// Get player birth place data.
 	sparqlQuery = sparqlQuery + " ?playerBirthPlace rdfs:label ?playerBirthPlaceName FILTER langMatches(lang(?playerBirthPlaceName),'en')."
 	sparqlQuery = sparqlQuery + " ?playerBirthPlace geo:lat ?playerBirthPlaceLatitude."
 	sparqlQuery = sparqlQuery + " ?playerBirthPlace geo:long ?playerBirthPlaceLongitude."
 
+	// Get player abstract.
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:abstract ?playerAbstract FILTER langMatches(lang(?playerAbstract),'en')."
 
+	// Get player career stations.
 	sparqlQuery = sparqlQuery + " <" + playerDBPediaPage + "> dbo:careerStation ?playerCareerStation."
 	sparqlQuery = sparqlQuery + " ?playerCareerStation dbo:team ?playerCareerStationTeam."
 	sparqlQuery = sparqlQuery + " ?playerCareerStation dbo:years ?playerCareerStationYears."
 	sparqlQuery = sparqlQuery + " ?playerCareerStation dbo:numberOfGoals ?playerCareerStationGoals."
 	sparqlQuery = sparqlQuery + " ?playerCareerStation dbo:numberOfMatches ?playerCareerStationMatches."
 
+	// Get player career team data.
 	sparqlQuery = sparqlQuery + " ?playerCareerStationTeam rdfs:label ?playerCareerStationTeamClubName FILTER langMatches(lang(?playerCareerStationTeamClubName),'en')."
 	sparqlQuery = sparqlQuery + " ?playerCareerStationTeam rdfs:comment ?playerCareerStationTeamComment FILTER langMatches(lang(?playerCareerStationTeamComment),'en')."
 
